@@ -107,13 +107,17 @@ h2 {
   background-color: #101418;
   top: 0;
   padding-top: 10px;
-  transition: transform 0.2s ease-out;
+  transition: transform 0.2s ease-out, font-size 0.2s ease-out;
   width: 100%;
   z-index: 1;
 }
 
-h2.sticky {
-  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+h2.stuck {
+  font-size: 18px;
+
+  @media (min-width: 600px) {
+    font-size: 26px;
+  }
 }
 
 html {

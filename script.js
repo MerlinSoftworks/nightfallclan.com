@@ -14,6 +14,7 @@ document.addEventListener('DOMContentLoaded', function() {
     headers.forEach((header, index) => {
       // Get position of the header
       const headerTop = header.offsetTop;
+      const trueTop = header.getBoundingClientRect().top;
       
       // We need to add an offset to prevent overlap
       // When the next header is headerHeight pixels from the top, we should switch
@@ -27,6 +28,8 @@ document.addEventListener('DOMContentLoaded', function() {
         header.classList.add('sticky');
         activeHeaderIndex = Math.max(activeHeaderIndex, index);
       }
+
+      if (trueTop === 0) { header.classList.add('stuck') } else if (trueTop > 80) { header.classList.remove('stuck') }
     });
     
     // Second pass: adjust visibility based on active header
