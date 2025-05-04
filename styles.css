@@ -1,0 +1,150 @@
+body {
+  background-color: #101418;
+  color: #ffffff;
+  font-family: Georgia, serif;
+  font-size: 18px;
+  line-height: 1.6;
+  width: 100%;
+  padding: 40px 20px;
+  max-width: 750px;
+  box-sizing: border-box;
+
+  @media (min-width: 600px) {
+    padding: 60px 30px;
+  }
+}
+
+hr {
+  opacity: 0.5;
+  /* mask filter to fade the left and right edges */
+  mask-image: linear-gradient(to right, transparent 0%, black 20%, black 80%, transparent 100%);
+}
+
+.c-header {
+  display: flex;
+  flex-direction: column;
+
+  @media (min-width: 600px) {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+}
+
+.c-header > a {
+  align-self: center;
+  width: fit-content;
+}
+
+.left {
+  order: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-top: 20px;
+  align-items: center;
+  width: 285px;
+  margin: 20px auto 0 auto;
+
+  @media (min-width: 600px) {
+    order: 0;
+    margin-top: 0;
+    align-items: flex-start;
+  }
+}
+
+.left > span {
+  font-size: 12px;
+  opacity: 0.7;
+  text-align: left;
+  transition: all 250ms ease-out;
+}
+
+.left > span:has(a:hover) {
+  opacity: 1;
+}
+
+.right {
+  flex-grow: 1;
+}
+
+.u-center {
+  margin: 0 auto;
+  display: block;
+}
+
+.c-logo {
+  width: auto;
+  height: 75px;
+
+  @media (min-width: 600px) {
+    height: 150px;
+    padding: 20px 20px 20px 0;
+  }
+}
+
+h1, h2 {
+  line-height: 1.2;
+}
+
+h1 {
+  font-weight: 700;
+  font-size: 32px;
+  margin: 0 0 10px;
+  text-align: center;
+
+  @media (min-width: 600px) {
+    text-align: left;
+  }
+}
+
+h2 {
+  color: #ffffff;
+  font-size: 26px;
+  border-bottom: 1px solid #ffffff;
+  border-spacing: 5px;
+  position: sticky;
+  background-color: #101418;
+  top: 0;
+  padding-top: 10px;
+}
+
+a {
+  transition: all 100ms ease-out;
+  color: #5d8bff;
+  text-decoration: none;
+  text-decoration-color: transparent;
+  text-underline-offset: 0;
+}
+
+a:hover {
+  color: #8dadff;
+  text-decoration: underline dashed;
+  text-underline-offset: 5px;
+  text-decoration-color: #8dadff;
+  opacity: 1;
+}
+
+.c-year-range {
+  display: block;
+  padding: 5px 0 10px 0;
+  opacity: 0.6;
+  font-size: 60%;
+}
+
+.github-link {
+  display: block;
+  height: 32px;
+  width: 32px;
+  margin: 40px auto 0;
+  opacity: 0.6;
+
+  @media (min-width: 600px) {
+    margin: 60px auto 0;
+  }
+}
+
+.github-link > img {
+  height: 100%;
+  width: 100%;
+}
