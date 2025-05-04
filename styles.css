@@ -1,5 +1,5 @@
 body {
-  background-color: #101418;
+  background-color: #040506;
   color: #ffffff;
   font-family: Georgia, serif;
   font-size: 18px;
@@ -104,7 +104,7 @@ h2 {
   border-bottom: 1px solid #ffffff;
   border-spacing: 5px;
   position: sticky;
-  background-color: #101418;
+  background-color: #040506;
   top: 0;
   padding-top: 10px;
   transition: transform 0.2s ease-out, font-size 0.2s ease-out;
