@@ -179,10 +179,10 @@ a:hover {
   font-size: 60%;
 }
 
-.github-link {
-  display: block;
-  height: 32px;
-  width: 32px;
+.footer {
+  display: flex;
+  justify-content: center;
+  gap: 30px;
   margin: 40px auto 0;
 
   @media (min-width: 600px) {
@@ -190,11 +190,21 @@ a:hover {
   }
 }
 
-.github-link > img {
+.footer a {
+  height: 30px;
+  width: 30px;
+}
+
+.footer img {
   height: 100%;
   width: 100%;
 
   @media (prefers-color-scheme: light) {
     filter: invert(1);
   }
+}
+
+.footer .roblox-link {
+  height: 32px;
+  width: 32px;
 }
