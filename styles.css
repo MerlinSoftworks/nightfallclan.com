@@ -1,6 +1,9 @@
 :root {
   --white: #fbfbfb;
   --black: #121214;
+
+  --blue: #6c95ff;
+  --bright-blue: #1a5bff;
 }
 
 body {
@@ -149,18 +152,24 @@ p {
 
 a {
   transition: all 100ms ease-out;
-  color: #497cfe;
+  color: var(--blue);
   text-decoration: none;
   text-decoration-color: transparent;
   text-underline-offset: 0;
+
+  @media (prefers-color-scheme: light) {
+    color: var(--bright-blue);
+  }
 }
 
 a:hover {
-  color: #8dadff;
   text-decoration: underline dashed;
   text-underline-offset: 5px;
-  text-decoration-color: #8dadff;
-  opacity: 1;
+  text-decoration-color: var(--blue);
+
+  @media (prefers-color-scheme: light) {
+    text-decoration-color: var(--bright-blue);
+  }
 }
 
 .year-range {
