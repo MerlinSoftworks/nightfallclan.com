@@ -182,7 +182,7 @@ a:hover {
 .footer {
   display: flex;
   justify-content: center;
-  gap: 30px;
+  gap: 25px;
   margin: 40px auto 0;
 
   @media (min-width: 600px) {
