@@ -205,6 +205,8 @@ a:hover {
 }
 
 .footer .roblox-link {
-  height: 32px;
-  width: 32px;
+  height: 34px;
+  width: 34px;
+  position: relative;
+  bottom: 2px;
 }
