@@ -239,6 +239,7 @@ a:hover {
   border-radius: 9999px;
   transition: all 0.2s ease-out;
   color: #fff;
+  white-space: nowrap;
 }
 
 .nav-link:hover,
