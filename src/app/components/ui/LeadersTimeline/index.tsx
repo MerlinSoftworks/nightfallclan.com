@@ -10,15 +10,17 @@ import {
   type CSSProperties,
   type FocusEvent,
   type MouseEvent,
+  type Ref,
 } from "react";
 import { useRouter } from "next/navigation";
 import { Inter } from "next/font/google";
 import { useSearch } from "@context/SearchContext";
-import { CloseIcon, KeyIcon } from "@icons";
+import { CloseIcon, KeyIcon, PointerIcon } from "@icons";
 import { CALLOUT_TERMS } from "@/app/leaders/leaders";
 import type { Portraits } from "@/app/leaders/portraits";
 import { buildTimeline, type TimelineTerm } from "@/app/leaders/timeline";
 import styles from "./LeadersTimeline.module.scss";
+import { usePinTip } from "./usePinTip";
 
 /** Segments narrower than this (as % of the bar) don't show their term number. */
 const MIN_NUMBERED_WIDTH = 2.3;
@@ -129,6 +131,7 @@ function Tooltip({
   onMouseEnter,
   onMouseLeave,
   onBlur,
+  ref,
 }: {
   term: CardEntry;
   total: number;
@@ -144,9 +147,11 @@ function Tooltip({
   onMouseEnter?: () => void;
   onMouseLeave?: () => void;
   onBlur?: (e: FocusEvent<HTMLDivElement>) => void;
+  ref?: Ref<HTMLDivElement>;
 }) {
   return (
     <div
+      ref={ref}
       className={`${styles.tooltip} ${pinned ? styles.tooltipPinned : ""} ${className}`}
       style={style}
       // Focusable so a click inside the card moves focus here rather than off the pinned element.
@@ -288,6 +293,10 @@ export default function LeadersTimeline({
   pinnedRef.current = pinned;
   const hideTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   useEffect(() => () => clearTimeout(hideTimer.current), []);
+  // The "click to pin" hint watches the horizontal card come and go.
+  const cardRef = useRef<HTMLDivElement>(null);
+  const chartRef = useRef<HTMLDivElement>(null);
+  const pinTip = usePinTip(cardRef, chartRef);
 
   // While something is pinned, hovering other segments or callouts doesn't take over.
   const select = (t: Indexed, via: Via, force = false) => () => {
@@ -295,10 +304,16 @@ export default function LeadersTimeline({
     if (pinnedRef.current && !force) return;
     setHorizontalSelected({ index: t.index, ...via });
   };
-  const deselect = () => {
+  // Called with the mouseleave event when the pointer leaves a segment or callout; without one from
+  // the blur and card-leave paths, which the hint then knows not to count as misses.
+  const deselect = (e?: MouseEvent<Element>) => {
+    pinTip.leave(e);
     clearTimeout(hideTimer.current);
     hideTimer.current = setTimeout(() => {
-      if (!tooltipHovered.current) setHorizontalSelected(pinnedRef.current);
+      if (tooltipHovered.current) return;
+      // The card is still mounted here, so the hint can measure where it was.
+      if (!pinnedRef.current) pinTip.hidden();
+      setHorizontalSelected(pinnedRef.current);
     }, HIDE_DELAY);
   };
   const releasePin = () => {
@@ -315,6 +330,7 @@ export default function LeadersTimeline({
     const next = { index: t.index, ...via };
     pinnedRef.current = next;
     setPinned(next);
+    pinTip.pinned();
     (e.currentTarget as HTMLElement).focus();
     select(t, via, true)();
   };
@@ -379,6 +395,7 @@ export default function LeadersTimeline({
       {/* Horizontal layout (768px and up) */}
       <div
         className={styles.horizontal}
+        onPointerMove={pinTip.onPointerMove}
         onKeyDown={(e) => e.key === "Escape" && (document.activeElement as HTMLElement | null)?.blur()}
       >
         <div className={styles.callouts}>
@@ -432,7 +449,7 @@ export default function LeadersTimeline({
           </svg>
         </div>
 
-        <div className={styles.chart}>
+        <div className={styles.chart} ref={chartRef}>
           <div className={styles.bar}>
             {terms.map((t) => (
               <button
@@ -639,6 +656,7 @@ export default function LeadersTimeline({
 
           {hSel && (
             <Tooltip
+              ref={cardRef}
               term={hSel}
               portrait={portraitOf(hSel)}
               total={terms.length}
@@ -656,6 +674,7 @@ export default function LeadersTimeline({
           )}
           {hOwner && (
             <Tooltip
+              ref={cardRef}
               term={ownerCard}
               portrait={portraitOf(ownerCard)}
               total={terms.length}
@@ -668,6 +687,18 @@ export default function LeadersTimeline({
               onBlur={leaveTooltipFocus}
               style={{ left: cardLeft(ownerCenter), top: CARD_BELOW_LANE }}
             />
+          )}
+          {pinTip.tip && (
+            <div
+              className={`${styles.pinTip} ${pinTip.tip.leaving ? styles.pinTipOut : ""}`}
+              style={{ left: pinTip.tip.x, top: pinTip.tip.y }}
+              aria-hidden="true"
+            >
+              <span className={styles.pinTipIcon}>
+                <PointerIcon />
+              </span>
+              Click a term to pin its card
+            </div>
           )}
         </div>
       </div>

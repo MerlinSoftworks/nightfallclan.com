@@ -13,3 +13,4 @@ export { default as RobloxIcon } from "./RobloxIcon";
 export { default as GitHubIcon } from "./GitHubIcon";
 export { default as DiscordIcon } from "./DiscordIcon";
 export { default as GroupBioIcon } from "./GroupBioIcon";
+export { default as PointerIcon } from "./PointerIcon";

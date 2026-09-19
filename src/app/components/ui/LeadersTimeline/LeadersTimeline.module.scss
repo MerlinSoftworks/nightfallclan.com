@@ -762,6 +762,114 @@
   color: var(--caption);
 }
 
+// A hint hung off the bottom edge of a card that just got away: click to pin it. It shows after a
+// few near-misses, once a month at most, and never takes the pointer (that would cause misses).
+.pinTip {
+  position: absolute;
+  z-index: 7;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 11px 5px 9px;
+  transform: translate(-50%, -50%);
+  border: 1px solid var(--ring);
+  border-radius: 9999px;
+  background: var(--tooltip-bg);
+  box-shadow: 0 4px 12px var(--tooltip-shadow);
+  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-size: 11.5px;
+  line-height: 1.2;
+  white-space: nowrap;
+  color: var(--ink);
+  pointer-events: none;
+  // No fill mode: a filled enter animation would hold the opacity and defeat the fade-out below.
+  animation: tip-in 220ms ease-out;
+  transition: opacity 200ms ease-out;
+}
+
+.pinTipOut {
+  opacity: 0;
+}
+
+// The arrow presses once a cycle and a ring ripples out from its tip.
+.pinTipIcon {
+  position: relative;
+  display: flex;
+  color: var(--ring);
+
+  svg {
+    width: 14px;
+    height: 14px;
+    animation: tip-press 1.8s ease-in-out infinite;
+  }
+
+  &::before {
+    content: "";
+    position: absolute;
+    // Centred on the arrow's tip.
+    top: -3px;
+    left: -3px;
+    width: 10px;
+    height: 10px;
+    border: 1.5px solid currentColor;
+    border-radius: 50%;
+    opacity: 0;
+    animation: tip-pulse 1.8s ease-out infinite;
+  }
+}
+
+@keyframes tip-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, calc(-50% + 6px));
+  }
+}
+
+@keyframes tip-press {
+  0%,
+  20%,
+  100% {
+    transform: none;
+  }
+
+  10% {
+    transform: translate(1px, 1px) scale(0.9);
+  }
+}
+
+@keyframes tip-pulse {
+  0%,
+  8% {
+    transform: scale(0.4);
+    opacity: 0;
+  }
+
+  12% {
+    opacity: 0.9;
+  }
+
+  45%,
+  100% {
+    transform: scale(2.2);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pinTip {
+    animation: none;
+    transition: none;
+  }
+
+  .pinTipIcon svg {
+    animation: none;
+  }
+
+  .pinTipIcon::before {
+    display: none;
+  }
+}
+
 // Vertical layout
 
 .vertical {
