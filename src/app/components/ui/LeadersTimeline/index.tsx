@@ -113,7 +113,7 @@ const cardLeft = (center: string) =>
 /** What a card needs to show; every term qualifies, and so does the group owner. */
 type CardEntry = Pick<
   TimelineTerm,
-  "name" | "profileUrl" | "aside" | "longDates" | "exactDuration" | "current" | "index" | "start" | "end"
+  "name" | "profileUrl" | "aside" | "longDates" | "exactDuration" | "index" | "start" | "end"
 >;
 
 function Tooltip({
@@ -193,7 +193,6 @@ function Tooltip({
       <div className={styles.tooltipDates}>{term.longDates}</div>
       <div className={styles.tooltipDuration}>
         {term.exactDuration}
-        {term.current && " and counting"}
       </div>
       <div className={styles.tooltipFooter}>
         <span className={styles.tooltipTerm}>
@@ -264,7 +263,7 @@ export default function LeadersTimeline({
   const ownerCenter = `${(owner.left + 100) / 2}%`;
   const vSel = typeof verticalSelected === "number" ? terms[verticalSelected - 1] : null;
   const vOwner = verticalSelected === "owner";
-  const ownerCard: CardEntry = { ...owner, aside: "", current: true, index: 0 };
+  const ownerCard: CardEntry = { ...owner, aside: "", index: 0 };
   const toggleOwner = () => setVerticalSelected(vOwner ? null : "owner");
   // Whichever layout is showing, tell the page what's highlighted (its start date, by value).
   const highlightedTime =
