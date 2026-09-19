@@ -11,6 +11,8 @@ const MONTHS_LONG = [
 /** Vertical scale (px per day) and the shortest a term block may be. */
 const V_PX_PER_DAY = 0.2;
 const V_MIN_HEIGHT = 24;
+/** The narrowest a horizontal segment may be, as a percentage of its bar (3px at the timeline's full 1000px width). */
+export const MIN_SEGMENT_WIDTH = 0.3;
 
 export type TimelineTerm = {
   index: number;
@@ -110,22 +112,49 @@ export function formatExactDuration(start: Date, end: Date): string {
     .join(", ");
 }
 
+/**
+ * Widths (percentages summing to 100) with none below `min`: the segments held open to the
+ * minimum borrow the difference from all the others pro rata, so the rest of the bar stays to scale.
+ */
+function withMinimumWidths(raw: number[], min: number): number[] {
+  const held = new Set<number>();
+  for (;;) {
+    const free = 100 - held.size * min;
+    const rawFree = raw.reduce((sum, w, i) => (held.has(i) ? sum : sum + w), 0);
+    const widths = raw.map((w, i) => (held.has(i) ? min : (w / rawFree) * free));
+    const next = widths.findIndex((w, i) => !held.has(i) && w < min);
+    if (next < 0) return widths;
+    held.add(next);
+  }
+}
+
 export function buildTimeline(nowIso: string): Timeline {
   const now = parseDate(nowIso);
   const origin = parseDate(TERMS[0].start);
   const firstYearEnd = parseDate(FIRST_YEAR_END);
   const totalDays = daysBetween(origin, now);
   const firstYearDays = daysBetween(origin, firstYearEnd);
-  const pct = (d: Date) => (daysBetween(origin, d) / totalDays) * 100;
 
-  let top = 0;
-  const terms = TERMS.map((term, i): TimelineTerm => {
+  // Every term's span first, since a segment's width depends on all the others once the
+  // shortest terms are held open to the minimum; the enlarged first year gets the same treatment.
+  const spans = TERMS.map((term, i) => {
     const start = parseDate(term.start);
     const next = TERMS[i + 1];
     const end = next ? parseDate(next.start) : now;
-    const days = daysBetween(start, end);
+    return { start, end, next, days: daysBetween(start, end), inFirstYear: end <= firstYearEnd };
+  });
+  const widths = withMinimumWidths(spans.map((s) => (s.days / totalDays) * 100), MIN_SEGMENT_WIDTH);
+  const firstYearSpans = spans.filter((s) => s.inFirstYear);
+  const insetWidths = withMinimumWidths(firstYearSpans.map((s) => (s.days / firstYearDays) * 100), MIN_SEGMENT_WIDTH);
+
+  let top = 0;
+  let left = 0;
+  let insetLeft = 0;
+  const terms = TERMS.map((term, i): TimelineTerm => {
+    const { start, end, next, days, inFirstYear } = spans[i];
+    const width = widths[i];
+    const insetWidth = inFirstYear ? insetWidths[firstYearSpans.indexOf(spans[i])] : null;
     const height = Math.max(V_MIN_HEIGHT, days * V_PX_PER_DAY);
-    const inFirstYear = end <= firstYearEnd;
     const ordinal = term.termOf ? `${term.termOf}${getOrdinalSuffix(term.termOf)} term` : "";
 
     const built: TimelineTerm = {
@@ -141,28 +170,37 @@ export function buildTimeline(nowIso: string): Timeline {
       exactDuration: formatExactDuration(start, end),
       longDates: `${formatLongDate(start)} – ${next ? formatLongDate(end) : "present"}`,
       shortDates: `${formatShortDate(start)} – ${next ? formatShortDate(end) : "present"}`,
-      left: pct(start),
-      width: (days / totalDays) * 100,
-      insetLeft: inFirstYear ? (daysBetween(origin, start) / firstYearDays) * 100 : null,
-      insetWidth: inFirstYear ? (days / firstYearDays) * 100 : null,
+      left,
+      width,
+      insetLeft: inFirstYear ? insetLeft : null,
+      insetWidth,
       top,
       height,
     };
     top += height;
+    left += width;
+    if (insetWidth !== null) insetLeft += insetWidth;
     return built;
   });
 
-  // Where a date falls on the vertical scale, which stretches short terms.
-  const verticalTop = (d: Date) => {
+  // Where a date falls on either scale; both stretch short terms, so it's found within its term.
+  const within = (d: Date) => {
     const term = terms.findLast((t) => t.start <= d) ?? terms[0];
-    const span = Math.max(1, daysBetween(term.start, term.end));
-    return term.top + (daysBetween(term.start, d) / span) * term.height;
+    return { term, along: daysBetween(term.start, d) / Math.max(1, daysBetween(term.start, term.end)) };
+  };
+  const horizontalLeft = (d: Date) => {
+    const { term, along } = within(d);
+    return term.left + along * term.width;
+  };
+  const verticalTop = (d: Date) => {
+    const { term, along } = within(d);
+    return term.top + along * term.height;
   };
 
   const ticks: Tick[] = [];
   for (let year = origin.getUTCFullYear() + 1; year <= now.getUTCFullYear(); year++) {
     const jan1 = new Date(Date.UTC(year, 0, 1));
-    ticks.push({ year, left: pct(jan1), top: verticalTop(jan1) });
+    ticks.push({ year, left: horizontalLeft(jan1), top: verticalTop(jan1) });
   }
 
   const ownerStart = parseDate(GROUP_OWNER.start);
@@ -170,7 +208,7 @@ export function buildTimeline(nowIso: string): Timeline {
   return {
     terms,
     ticks,
-    firstYearWidth: (firstYearDays / totalDays) * 100,
+    firstYearWidth: horizontalLeft(firstYearEnd),
     owner: {
       name: GROUP_OWNER.name,
       profileUrl: `https://www.roblox.com/users/${GROUP_OWNER.userId}/profile`,
@@ -179,7 +217,7 @@ export function buildTimeline(nowIso: string): Timeline {
       end: now,
       longDates: `${formatLongDate(ownerStart)} – present`,
       exactDuration: formatExactDuration(ownerStart, now),
-      left: pct(ownerStart),
+      left: horizontalLeft(ownerStart),
       top: verticalTop(ownerStart),
     },
     verticalHeight: top,

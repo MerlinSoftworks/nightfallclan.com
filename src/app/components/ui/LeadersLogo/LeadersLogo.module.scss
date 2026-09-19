@@ -1,0 +1,64 @@
+// The same footprint as the header's plain logo; the two layers stack so one fades out over the other.
+.swap {
+  position: relative;
+  display: block;
+  width: 75px;
+  height: 75px;
+
+  @media (min-width: 600px) {
+    width: 150px;
+    height: 150px;
+  }
+}
+
+.layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  will-change: transform, opacity;
+}
+
+// A quiet crossfade: the new logo fades up from a touch smaller while the old one fades away.
+.incoming {
+  animation: logo-in 300ms ease-out forwards;
+  z-index: 1;
+}
+
+.outgoing {
+  animation: logo-out 300ms ease-out forwards;
+  z-index: 2;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .incoming {
+    animation: none;
+  }
+
+  .outgoing {
+    display: none;
+  }
+}
+
+@keyframes logo-in {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes logo-out {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
+  }
+}

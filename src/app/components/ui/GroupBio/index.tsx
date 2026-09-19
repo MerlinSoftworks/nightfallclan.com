@@ -3,28 +3,12 @@
 import type { TouchEvent } from "react";
 import { GroupBioIcon } from "@icons";
 import { useEffect, useState } from "react";
+import { useSwapTransition } from "@hooks/useSwapTransition";
+import { LOGOS as logos } from "@/app/utils/logos";
 import { sanitizeText } from "@/app/utils/sanitize";
 import styles from "./GroupBio.module.scss";
 
 type Timeline<T> = Record<string, T>;
-type TransitionState<T> = {
-  displayedValue: T;
-  outgoingValue: T | null;
-  isTransitioning: boolean;
-  transitionKey: number;
-};
-
-const logos = {
-  "2010-03-10": "/logos/2010.png",
-  "2011-03-16": "/logos/2011a.png",
-  "2011-07-16": "/logos/2011b.png",
-  "2011-08-26": "/logos/2011c.png",
-  "2012-11-16": "/logos/2011tg.png",
-  "2012-11-24": "/logos/2011c.png",
-  "2013-05-03": "/logos/2013.png",
-  "2015-01-01": "/logos/2015.png",
-  "2018-09-17": "/logos/2018.png",
-};
 
 const forts = {
   "2010-03-10": "/forts/solstice.png",
@@ -231,34 +215,6 @@ function resolveInterpolatedTimelineValue(
   }
 
   return timeline[fallbackKey];
-}
-
-function useSwapTransition<T>(value: T, durationMs: number): TransitionState<T> {
-  const [displayedValue, setDisplayedValue] = useState(value);
-  const [outgoingValue, setOutgoingValue] = useState<T | null>(null);
-  const [transitionKey, setTransitionKey] = useState(0);
-
-  useEffect(() => {
-    if (Object.is(value, displayedValue)) return;
-
-    setOutgoingValue(displayedValue);
-    setDisplayedValue(value);
-    setTransitionKey((previousKey) => previousKey + 1);
-    const timeoutId = window.setTimeout(() => {
-      setOutgoingValue(null);
-    }, durationMs);
-
-    return () => {
-      window.clearTimeout(timeoutId);
-    };
-  }, [value, displayedValue, durationMs]);
-
-  return {
-    displayedValue,
-    outgoingValue,
-    isTransitioning: outgoingValue !== null,
-    transitionKey,
-  };
 }
 
 export default function GroupBio({ latestDateShown }: { latestDateShown?: number | null }) {
