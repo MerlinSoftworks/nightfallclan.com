@@ -140,7 +140,7 @@ export function buildTimeline(nowIso: string): Timeline {
   const spans = TERMS.map((term, i) => {
     const start = parseDate(term.start);
     const next = TERMS[i + 1];
-    const end = next ? parseDate(next.start) : now;
+    const end = term.end ? parseDate(term.end) : next ? parseDate(next.start) : now;
     return { start, end, next, days: daysBetween(start, end), inFirstYear: end <= firstYearEnd };
   });
   const widths = withMinimumWidths(spans.map((s) => (s.days / totalDays) * 100), MIN_SEGMENT_WIDTH);

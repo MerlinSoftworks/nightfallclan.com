@@ -10,15 +10,17 @@ import {
   type CSSProperties,
   type FocusEvent,
   type MouseEvent,
+  type Ref,
 } from "react";
 import { useRouter } from "next/navigation";
 import { Inter } from "next/font/google";
 import { useSearch } from "@context/SearchContext";
-import { CloseIcon, KeyIcon } from "@icons";
+import { KeyIcon, PinIcon, PointerIcon } from "@icons";
 import { CALLOUT_TERMS } from "@/app/leaders/leaders";
 import type { Portraits } from "@/app/leaders/portraits";
 import { buildTimeline, type TimelineTerm } from "@/app/leaders/timeline";
 import styles from "./LeadersTimeline.module.scss";
+import { usePinTip } from "./usePinTip";
 
 /** Segments narrower than this (as % of the bar) don't show their term number. */
 const MIN_NUMBERED_WIDTH = 2.3;
@@ -36,8 +38,8 @@ const CARD_BELOW_BAR = 70;
 const CARD_BELOW_LANE = 94;
 /** Grace period (ms) for the pointer to cross from a segment onto its card. */
 const HIDE_DELAY = 150;
-/** Terms narrower than this (as % of the bar, ~10px at full width) get a callout of their own. */
-const MAX_TINY_WIDTH = 1;
+/** At most this many callouts fit above the bar. */
+const MAX_CALLOUTS = 7;
 /** Leader line offset from a callout's left edge, as % of the bar (7px at full width). */
 const CALLOUT_LINE_OFFSET = 0.7;
 /** Where the funnel's top edge sits in the link-line SVG (px from the bar's bottom). */
@@ -74,9 +76,15 @@ function roundedPath(points: [number, number][], r: number): string {
   return `${d} L ${lx} ${ly}`;
 }
 
-/** Terms labelled above the bar: the design's picks plus any too thin to read. */
-const calloutTerms = (terms: TimelineTerm[]) =>
-  terms.filter((t) => CALLOUT_TERMS.includes(t.index) || (t.insetWidth === null && t.width < MAX_TINY_WIDTH));
+/**
+ * Terms labelled above the bar: every term too narrow to carry its number (a callout is its only
+ * label), then the design's picks in order of preference, as many as fit.
+ */
+const calloutTerms = (terms: TimelineTerm[]) => {
+  const unnumbered = terms.filter((t) => t.insetWidth === null && t.width < MIN_NUMBERED_WIDTH);
+  const picks = CALLOUT_TERMS.map((i) => terms[i - 1]).filter((t) => t && !unnumbered.includes(t));
+  return [...unnumbered, ...picks].slice(0, MAX_CALLOUTS).sort((a, b) => a.index - b.index);
+};
 
 const ariaLabel = (t: TimelineTerm) => `Term ${t.index}, ${t.name}, ${t.duration}`;
 
@@ -129,6 +137,7 @@ function Tooltip({
   onMouseEnter,
   onMouseLeave,
   onBlur,
+  ref,
 }: {
   term: CardEntry;
   total: number;
@@ -144,9 +153,11 @@ function Tooltip({
   onMouseEnter?: () => void;
   onMouseLeave?: () => void;
   onBlur?: (e: FocusEvent<HTMLDivElement>) => void;
+  ref?: Ref<HTMLDivElement>;
 }) {
   return (
     <div
+      ref={ref}
       className={`${styles.tooltip} ${pinned ? styles.tooltipPinned : ""} ${className}`}
       style={style}
       // Focusable so a click inside the card moves focus here rather than off the pinned element.
@@ -181,7 +192,7 @@ function Tooltip({
             onUnpin?.();
           }}
         >
-          <CloseIcon />
+          <PinIcon />
         </button>
       )}
       <div className={styles.tooltipName}>
@@ -288,17 +299,33 @@ export default function LeadersTimeline({
   pinnedRef.current = pinned;
   const hideTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   useEffect(() => () => clearTimeout(hideTimer.current), []);
+  // The "click to pin" hint watches the horizontal card come and go.
+  const cardRef = useRef<HTMLDivElement>(null);
+  const chartRef = useRef<HTMLDivElement>(null);
+  const pinTip = usePinTip(cardRef, chartRef);
 
   // While something is pinned, hovering other segments or callouts doesn't take over.
   const select = (t: Indexed, via: Via, force = false) => () => {
     clearTimeout(hideTimer.current);
     if (pinnedRef.current && !force) return;
+    // Crossing onto another term on the way to a card (the bar beneath a callout, the lane above
+    // the enlarged view) loses that card as surely as the grace period does.
+    const shown = horizontalSelected;
+    if (shown && !pinnedRef.current && (shown.index !== t.index || shown.viaInset !== via.viaInset)) {
+      pinTip.lost("switched");
+    }
     setHorizontalSelected({ index: t.index, ...via });
   };
-  const deselect = () => {
+  // Called with the mouseleave event when the pointer leaves a segment or callout; without one from
+  // the blur and card-leave paths, which the hint then knows not to count as misses.
+  const deselect = (e?: MouseEvent<Element>) => {
+    pinTip.leave(e);
     clearTimeout(hideTimer.current);
     hideTimer.current = setTimeout(() => {
-      if (!tooltipHovered.current) setHorizontalSelected(pinnedRef.current);
+      if (tooltipHovered.current) return;
+      // The card is still mounted here, so the hint can measure where it was.
+      if (!pinnedRef.current) pinTip.lost("hidden");
+      setHorizontalSelected(pinnedRef.current);
     }, HIDE_DELAY);
   };
   const releasePin = () => {
@@ -315,6 +342,7 @@ export default function LeadersTimeline({
     const next = { index: t.index, ...via };
     pinnedRef.current = next;
     setPinned(next);
+    pinTip.pinned();
     (e.currentTarget as HTMLElement).focus();
     select(t, via, true)();
   };
@@ -379,6 +407,7 @@ export default function LeadersTimeline({
       {/* Horizontal layout (768px and up) */}
       <div
         className={styles.horizontal}
+        onPointerMove={pinTip.onPointerMove}
         onKeyDown={(e) => e.key === "Escape" && (document.activeElement as HTMLElement | null)?.blur()}
       >
         <div className={styles.callouts}>
@@ -432,7 +461,7 @@ export default function LeadersTimeline({
           </svg>
         </div>
 
-        <div className={styles.chart}>
+        <div className={styles.chart} ref={chartRef}>
           <div className={styles.bar}>
             {terms.map((t) => (
               <button
@@ -634,11 +663,12 @@ export default function LeadersTimeline({
           </div>
 
           <p className={styles.caption}>
-            Enlarged view of NFC&apos;s first year, since eight of the twenty terms are crammed into this comparatively brief window of time.
+            Enlarged view of NFC&apos;s first year, since eight of the twenty-two terms are crammed into this comparatively brief window of time.
           </p>
 
           {hSel && (
             <Tooltip
+              ref={cardRef}
               term={hSel}
               portrait={portraitOf(hSel)}
               total={terms.length}
@@ -656,6 +686,7 @@ export default function LeadersTimeline({
           )}
           {hOwner && (
             <Tooltip
+              ref={cardRef}
               term={ownerCard}
               portrait={portraitOf(ownerCard)}
               total={terms.length}
@@ -668,6 +699,18 @@ export default function LeadersTimeline({
               onBlur={leaveTooltipFocus}
               style={{ left: cardLeft(ownerCenter), top: CARD_BELOW_LANE }}
             />
+          )}
+          {pinTip.tip && (
+            <div
+              className={`${styles.pinTip} ${pinTip.tip.leaving ? styles.pinTipOut : ""}`}
+              style={{ left: pinTip.tip.x, top: pinTip.tip.y }}
+              aria-hidden="true"
+            >
+              <span className={styles.pinTipIcon}>
+                <PointerIcon />
+              </span>
+              Click a term to pin its card
+            </div>
           )}
         </div>
       </div>
