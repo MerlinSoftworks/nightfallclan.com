@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { metaClassName } from "@ui/HistoryHeader";
+import { getPortraits } from "./portraits";
 import LeadersView from "./LeadersView";
 
 export const metadata: Metadata = {
@@ -9,13 +10,15 @@ export const metadata: Metadata = {
 // Re-render daily so the current leader's running tenure stays accurate.
 export const revalidate = 86400;
 
-export default function LeadersPage() {
+export default async function LeadersPage() {
   const now = new Date().toISOString().slice(0, 10);
+  const portraits = await getPortraits();
 
   return (
     <div className="leaders-page-body">
       <LeadersView
         now={now}
+        portraits={portraits}
         title="Leaders of Nightfall Clan"
         meta={
           <span className={metaClassName}>

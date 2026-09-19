@@ -149,12 +149,66 @@
   width: auto;
 }
 
+// The avatar bust is scaled to a fixed size and placed so the centre of the face always lands on
+// one point in the empty space beside the dates, whatever the avatar; a vignette centred on that
+// same point keeps the face clear and dissolves everything around it into the panel. The face
+// point and the name row's right padding are tuned together: move the face left and the end of
+// a long name will sit under it.
+.portrait {
+  // Where the face's centre goes: in from the card's right edge, and down from its top.
+  --face-x: 52px;
+  --face-y: 44px;
+  --portrait: 120px;
+  // Roblox frames a bust's face at about 38% of its height.
+  --face-in-portrait: 0.38;
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 160px;
+  border-radius: 0 7px 7px 0; // the card's 8px corners inside its 1px border
+  overflow: hidden;
+  pointer-events: none;
+  background-size: var(--portrait);
+  background-position:
+    right calc(var(--face-x) - var(--portrait) / 2)
+    top calc(var(--face-y) - var(--portrait) * var(--face-in-portrait));
+  background-repeat: no-repeat;
+  // Tone the bust down so a bright avatar doesn't flare against the panel.
+  opacity: 0.7;
+  filter: saturate(0.8) brightness(0.85);
+  -webkit-mask-image: radial-gradient(84px 76px at calc(100% - var(--face-x)) var(--face-y), black 40%, rgba(0, 0, 0, 0.55) 68%, transparent 100%);
+  mask-image: radial-gradient(84px 76px at calc(100% - var(--face-x)) var(--face-y), black 40%, rgba(0, 0, 0, 0.55) 68%, transparent 100%);
+}
+
+// Stands in when a bust is missing: white on the dark card, dark on the light one. Its head
+// sits higher in its box (34%) than a real bust's face, so it gets its own vertical offset.
+.silhouette {
+  position: absolute;
+  top: calc(var(--face-y) - var(--portrait) * 0.34);
+  right: calc(var(--face-x) - var(--portrait) / 2);
+  width: var(--portrait);
+  height: var(--portrait);
+  fill: var(--funnel-ink);
+  opacity: 0.45;
+}
+
+// The card's text paints over the portrait.
+.tooltipName,
+.tooltipDates,
+.tooltipDuration,
+.tooltipTerm,
+.viewWallBtn {
+  position: relative;
+  z-index: 1;
+}
+
 .tooltipName {
   font-size: 15px;
   font-weight: 600;
   line-height: 1.35;
   color: var(--tooltip-title);
-  padding-right: 22px;
+  padding-right: 52px;
 
   a {
     color: inherit;
@@ -173,6 +227,8 @@
   position: absolute;
   top: 10px;
   right: 10px;
+  // Above the name row, whose right padding would otherwise cover the button.
+  z-index: 2;
   display: flex;
   padding: 3px;
   border: 0;
@@ -232,8 +288,10 @@
   justify-content: space-between;
   gap: 10px;
   margin-top: 10px;
-  padding-top: 9px;
-  border-top: 1px solid var(--rule);
+  padding-top: 10px;
+  // The rule fades out under the bust rather than cutting across it: the bust is too ghosted to
+  // hide a line behind it, so the line stops where the bust's vignette begins.
+  background: linear-gradient(to right, var(--rule) calc(100% - 136px), transparent calc(100% - 96px)) left top / 100% 1px no-repeat;
 }
 
 .tooltipTerm {
