@@ -214,33 +214,81 @@
   }
 }
 
+// A pin on a translucent disc. The disc sits over the portrait, which can be any colour, so it
+// is mostly the card's own colour (blurring what shows through) with the accent tinted over it
+// and a faint accent ring at its edge. Under the pointer the tint deepens and a slash draws
+// itself across the pin, from its top-left corner down, to say "unpin".
 .unpinBtn {
   position: absolute;
-  top: 10px;
-  right: 10px;
+  top: 8px;
+  right: 8px;
   // Above the name row, whose right padding would otherwise cover the button.
   z-index: 2;
   display: flex;
-  padding: 3px;
+  padding: 6px;
   border: 0;
-  border-radius: 4px;
-  background: none;
+  border-radius: 9999px;
+  background: var(--tooltip-bg); // for browsers without color-mix()
+  background: color-mix(in srgb, var(--tooltip-bg) 88%, transparent);
+  backdrop-filter: blur(6px);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--ring) 35%, transparent),
+    0 1px 4px rgba(0, 0, 0, 0.3);
   color: var(--ring);
   cursor: pointer;
+  outline: none;
   // Drops into place when a card is pinned, with a small overshoot so it catches the eye.
   animation: pin-in 320ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
 
-  &:hover {
-    background: var(--rule);
+  // The accent tint over the disc.
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: var(--ring);
+    opacity: 0.14;
+    transition: opacity 150ms ease-out;
+  }
+
+  &:hover::before,
+  &:focus-visible::before {
+    opacity: 0.28;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
   }
 
   svg {
+    position: relative; // above the tint
+    display: block;
     width: 14px;
     height: 14px;
   }
 
+  // The slash and the gap it cuts through the pin sit retracted (see PinIcon) until hovered.
+  [data-slash],
+  [data-slash-gap] {
+    transition: stroke-dashoffset 220ms ease-out;
+  }
+
+  &:hover,
+  &:focus-visible {
+    [data-slash],
+    [data-slash-gap] {
+      stroke-dashoffset: 0;
+    }
+  }
+
   @media (prefers-reduced-motion: reduce) {
     animation: none;
+
+    [data-slash],
+    [data-slash-gap] {
+      transition: none;
+    }
   }
 }
 

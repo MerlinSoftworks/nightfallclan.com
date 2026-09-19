@@ -15,7 +15,7 @@ import {
 import { useRouter } from "next/navigation";
 import { Inter } from "next/font/google";
 import { useSearch } from "@context/SearchContext";
-import { CloseIcon, KeyIcon, PointerIcon } from "@icons";
+import { KeyIcon, PinIcon, PointerIcon } from "@icons";
 import { CALLOUT_TERMS } from "@/app/leaders/leaders";
 import type { Portraits } from "@/app/leaders/portraits";
 import { buildTimeline, type TimelineTerm } from "@/app/leaders/timeline";
@@ -192,7 +192,7 @@ function Tooltip({
             onUnpin?.();
           }}
         >
-          <CloseIcon />
+          <PinIcon />
         </button>
       )}
       <div className={styles.tooltipName}>
