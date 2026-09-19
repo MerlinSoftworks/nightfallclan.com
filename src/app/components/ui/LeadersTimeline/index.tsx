@@ -278,7 +278,7 @@ export default function LeadersTimeline({
   const ownerCenter = `${(owner.left + 100) / 2}%`;
   const vSel = typeof verticalSelected === "number" ? terms[verticalSelected - 1] : null;
   const vOwner = verticalSelected === "owner";
-  const ownerCard: CardEntry = { ...owner, aside: "", index: 0 };
+  const ownerCard: CardEntry = { ...owner, aside: owner.alias, index: 0 };
   const toggleOwner = () => setVerticalSelected(vOwner ? null : "owner");
   // Whichever layout is showing, tell the page what's highlighted (its start date, by value).
   const highlightedTime =
