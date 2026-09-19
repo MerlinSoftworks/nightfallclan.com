@@ -16,7 +16,7 @@ export type Term = {
 
 export const TERMS: Term[] = [
   { name: "Soccerpr89", termOf: 1, start: "2010-03-06", userId: 785045 },
-  { name: "Trick555", start: "2010-03-22", userId: 648020 },
+  { name: "trick555", start: "2010-03-22", userId: 648020 },
   // Currently named Malvus on Roblox; shown under the name used while leading.
   { name: "SoccerKing89", alias: "dboot98", start: "2010-03-26", userId: 5904658 },
   { name: "Soccerpr89", termOf: 2, start: "2010-04-04", userId: 785045 },

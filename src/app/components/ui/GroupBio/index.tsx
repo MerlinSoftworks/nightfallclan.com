@@ -18,7 +18,7 @@ const forts = {
 
 const owners = {
   "2010-03-10": "Soccerpr89",
-  "2010-03-22": "Trick555",
+  "2010-03-22": "trick555",
   "2010-03-26": "SoccerKing89",
   "2010-04-04": "Soccerpr89 (2nd term)",
   "2010-04-07": "Vince13579",
