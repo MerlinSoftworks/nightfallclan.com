@@ -39,8 +39,8 @@
   padding-bottom: 10px;
   padding-right: 2rem;
   border-radius: 5px;
-  background: #232326;
-  color: #fff;
+  background: var(--nfc-bg-input);
+  color: var(--nfc-ink-strong);
   box-sizing: border-box;
   transition: all 0.2s ease-out;
   border: none;
@@ -62,7 +62,7 @@
   left: 12px;
   top: 50%;
   transform: translateY(-50%);
-  color: #cdcdcd;
+  color: var(--nfc-ink-muted);
   pointer-events: none;
   transition: color 0.2s ease;
 }

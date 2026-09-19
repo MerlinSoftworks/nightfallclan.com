@@ -14,9 +14,9 @@
   top: 10px;
   background: none;
   font-size: 0.7rem;
-  background-color: #fff;
+  background-color: var(--nfc-inverse-bg);
   border: none;
-  color: black;
+  color: var(--nfc-inverse-ink);
   font-weight: bold;
   border-radius: 9999px;
   padding: 5px 15px;
@@ -40,15 +40,15 @@
   justify-content: flex-start;
   gap: 15px;
   margin-bottom: 10px;
-  background-color: #191a1f;
+  background-color: var(--nfc-bg-elevated);
   padding: 15px;
   border-radius: 8px;
   transition: all 0.2s ease;
 }
 
 .post--highlighted {
-  background-color: #3d3d3d;
-  box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+  background-color: var(--nfc-bg-highlight);
+  box-shadow: 0 0 10px var(--nfc-glow);
 }
 
 .post__avatarContainer {
@@ -61,8 +61,8 @@
   width: 50px;
   height: 50px;
   border-radius: 50%;
-  background-color: #2d2d2d;
-  border: 2px solid #1d1d1d;
+  background-color: var(--nfc-bg-muted);
+  border: 2px solid var(--nfc-bg-elevated);
 }
 
 .post__content {
@@ -91,14 +91,14 @@
   border: none;
   padding: 0;
   margin: 0;
-  color: rgb(108, 149, 255);
+  color: var(--nfc-link);
   font-size: 14px;
   font-weight: 600;
   transition: color 0.2s ease;
 }
 
 .post__date {
-  color: #ffffff;
+  color: var(--nfc-ink-strong);
   line-height: 1;
   font-size: 11px;
   opacity: 0.7;
@@ -117,7 +117,12 @@
 }
 
 .post__avatar--loading {
-  background: linear-gradient(to right, #3c3c3c 8%, #444444 18%, #3c3c3c 33%);
+  background: linear-gradient(
+    to right,
+    var(--nfc-avatar-a) 8%,
+    var(--nfc-avatar-b) 18%,
+    var(--nfc-avatar-a) 33%
+  );
   background-size: 200% 100%;
   animation: shimmer 4s linear infinite;
 }
@@ -128,7 +133,12 @@
 }
 
 .skeleton {
-  background: linear-gradient(90deg, #232326 25%, #2d2d2d 37%, #232326 63%);
+  background: linear-gradient(
+    90deg,
+    var(--nfc-skeleton-a) 25%,
+    var(--nfc-skeleton-b) 37%,
+    var(--nfc-skeleton-a) 63%
+  );
   background-size: 400% 100%;
   animation: shimmer 1.2s linear infinite;
   border-radius: 4px;

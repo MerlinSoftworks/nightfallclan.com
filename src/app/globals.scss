@@ -1,16 +1,78 @@
 :root {
+  // Color tokens. Dark is the default; the light block below overrides them.
+  --nfc-bg: #121215;
+  --nfc-bg-elevated: #191a1f;
+  --nfc-bg-sunken: #070708;
+  --nfc-bg-input: #232326;
+  --nfc-bg-muted: #2d2d2d;
+  --nfc-bg-highlight: #3d3d3d;
+  --nfc-bg-subtle: rgba(255, 255, 255, 0.08);
+  --nfc-ink: rgba(255, 255, 255, 0.87);
+  --nfc-ink-strong: #ffffff;
+  --nfc-ink-muted: rgba(255, 255, 255, 0.6);
+  --nfc-ink-faint: rgba(255, 255, 255, 0.45);
+  --nfc-border: rgba(255, 255, 255, 0.14);
+  --nfc-border-strong: #fbfbfb;
+  --nfc-link: #6c95ff;
+  --nfc-accent: rgb(108, 149, 255);
+  --nfc-accent-ink: rgb(180, 200, 255);
+  --nfc-inverse-bg: #ffffff;
+  --nfc-inverse-ink: #121215;
+  --nfc-skeleton-a: #232326;
+  --nfc-skeleton-b: #2d2d2d;
+  --nfc-avatar-a: #3c3c3c;
+  --nfc-avatar-b: #444444;
+  --nfc-glow: rgba(255, 255, 255, 0.2);
+  --nfc-overlay: rgba(0, 0, 0, 0.4);
+  --nfc-shadow: rgba(0, 0, 0, 0.35);
+  --nfc-fort-brightness: 0.4;
+  --nfc-fort-opacity: 0.6;
+
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
 
   color-scheme: dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #121215;
+  color: var(--nfc-ink);
+  background-color: var(--nfc-bg);
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
+  @media (prefers-color-scheme: light) {
+    --nfc-bg: #fbfbfb;
+    --nfc-bg-elevated: #ffffff;
+    --nfc-bg-sunken: #e4e4ea;
+    --nfc-bg-input: #e9e9ef;
+    --nfc-bg-muted: #d9d9e0;
+    --nfc-bg-highlight: #dfe3f5;
+    --nfc-bg-subtle: rgba(18, 18, 21, 0.06);
+    --nfc-ink: #121215;
+    --nfc-ink-strong: #121215;
+    --nfc-ink-muted: rgba(18, 18, 21, 0.65);
+    --nfc-ink-faint: rgba(18, 18, 21, 0.5);
+    --nfc-border: rgba(18, 18, 21, 0.14);
+    --nfc-border-strong: #121215;
+    --nfc-link: #1a5bff;
+    --nfc-accent-ink: #1a5bff;
+    --nfc-inverse-bg: #121215;
+    --nfc-inverse-ink: #ffffff;
+    --nfc-skeleton-a: #e6e6ec;
+    --nfc-skeleton-b: #f2f2f6;
+    --nfc-avatar-a: #dcdce3;
+    --nfc-avatar-b: #e8e8ee;
+    --nfc-glow: rgba(0, 0, 0, 0.15);
+    --nfc-overlay: rgba(255, 255, 255, 0.7);
+    --nfc-shadow: rgba(0, 0, 0, 0.18);
+    --nfc-fort-brightness: 1.25;
+    --nfc-fort-opacity: 0.3;
+
+    color-scheme: light;
+    color: #121215;
+    background-color: #fbfbfb;
+  }
 }
 
 * {
@@ -71,9 +133,5 @@ h1 {
 
   @media (min-width: 600px) {
     padding: 50px 30px 60px;
-  }
-
-  @media (prefers-color-scheme: light) {
-    color: #121215;
   }
 }

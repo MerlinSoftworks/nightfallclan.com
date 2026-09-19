@@ -161,6 +161,48 @@ function intervalLabel(ms: number): string {
 const MINIMAP_BUCKETS = 100;
 const ZOOM_EPSILON_MS = 1;
 
+const LIGHT_SCHEME_QUERY = "(prefers-color-scheme: light)";
+
+function prefersLightScheme(): boolean {
+  return (
+    typeof window !== "undefined" && window.matchMedia(LIGHT_SCHEME_QUERY).matches
+  );
+}
+
+/** Colors that must follow the OS color scheme (mirrors the tokens in globals.scss). */
+function chartPalette(light: boolean) {
+  return light
+    ? {
+        mode: "light" as const,
+        foreColor: "rgba(18, 18, 21, 0.87)",
+        labelColor: "rgba(18, 18, 21, 0.6)",
+        gridColor: "#d9d9e0",
+        minimapRangeFill: "rgba(18, 18, 21, 0.12)",
+        minimapRangeStroke: "rgba(18, 18, 21, 0.5)",
+      }
+    : {
+        mode: "dark" as const,
+        foreColor: "rgba(255, 255, 255, 0.87)",
+        labelColor: "rgba(255, 255, 255, 0.6)",
+        gridColor: "#2d2d2d",
+        minimapRangeFill: "rgba(255, 255, 255, 0.15)",
+        minimapRangeStroke: "rgba(255, 255, 255, 0.5)",
+      };
+}
+
+/** ApexCharts options that depend on the color scheme. */
+function schemeChartOptions(light: boolean) {
+  const palette = chartPalette(light);
+  return {
+    chart: { foreColor: palette.foreColor },
+    xaxis: { labels: { style: { colors: palette.labelColor } } },
+    yaxis: { labels: { style: { colors: palette.labelColor } } },
+    grid: { borderColor: palette.gridColor, strokeDashArray: 3 },
+    tooltip: { theme: palette.mode },
+    theme: { mode: palette.mode },
+  };
+}
+
 export default function MessageDensityChart() {
   const router = useRouter();
   const { setInputValue } = useSearch();
@@ -367,9 +409,10 @@ export default function MessageDensityChart() {
       const fullRange = fullMax - fullMin;
       const x1 = ((range.min - fullMin) / fullRange) * w;
       const x2 = ((range.max - fullMin) / fullRange) * w;
-      ctx.fillStyle = "rgba(255, 255, 255, 0.15)";
+      const palette = chartPalette(prefersLightScheme());
+      ctx.fillStyle = palette.minimapRangeFill;
       ctx.fillRect(x1, 0, x2 - x1, h);
-      ctx.strokeStyle = "rgba(255, 255, 255, 0.5)";
+      ctx.strokeStyle = palette.minimapRangeStroke;
       ctx.lineWidth = 1;
       ctx.strokeRect(x1, 0, x2 - x1, h);
     }
@@ -809,12 +852,13 @@ export default function MessageDensityChart() {
         return `${fd(val)} – ${fd(val + currentIntervalMsRef.current)}`;
       };
 
+      const scheme = schemeChartOptions(prefersLightScheme());
       const options: any = {
         chart: {
           type: "area",
           height: "100%",
           background: "transparent",
-          foreColor: "rgba(255, 255, 255, 0.87)",
+          foreColor: scheme.chart.foreColor,
           fontFamily: "system-ui, Avenir, Helvetica, Arial, sans-serif",
           animations: { enabled: false },
           toolbar: { show: false },
@@ -834,11 +878,11 @@ export default function MessageDensityChart() {
           min: initialData.viewMin,
           max: initialData.viewMax,
           tooltip: { enabled: false },
-          labels: { style: { colors: "rgba(255, 255, 255, 0.6)" } },
+          labels: scheme.xaxis.labels,
         },
         yaxis: {
           title: { text: "Wall Posts" },
-          labels: { style: { colors: "rgba(255, 255, 255, 0.6)" } },
+          labels: scheme.yaxis.labels,
         },
         dataLabels: { enabled: false },
         stroke: { curve: "smooth", width: 2 },
@@ -852,9 +896,9 @@ export default function MessageDensityChart() {
             stops: [0, 100],
           },
         },
-        grid: { borderColor: "#2d2d2d", strokeDashArray: 3 },
-        tooltip: { theme: "dark", x: { formatter: tooltipXFormatter } },
-        theme: { mode: "dark" },
+        grid: scheme.grid,
+        tooltip: { ...scheme.tooltip, x: { formatter: tooltipXFormatter } },
+        theme: scheme.theme,
       };
 
       const chart = new ApexCharts(chartElRef.current, options);
@@ -911,8 +955,17 @@ export default function MessageDensityChart() {
 
     init();
 
+    // Re-theme the chart if the OS color scheme changes while the page is open
+    const schemeMq = window.matchMedia(LIGHT_SCHEME_QUERY);
+    const handleSchemeChange = (e: MediaQueryListEvent) => {
+      chartRef.current?.updateOptions(schemeChartOptions(e.matches), false, false);
+      drawMinimap();
+    };
+    schemeMq.addEventListener("change", handleSchemeChange);
+
     return () => {
       destroyed = true;
+      schemeMq.removeEventListener("change", handleSchemeChange);
       if (minimapPanFrameRef.current)
         cancelAnimationFrame(minimapPanFrameRef.current);
       if (minimapFadeTimerRef.current)

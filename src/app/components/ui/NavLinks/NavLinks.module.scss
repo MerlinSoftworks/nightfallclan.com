@@ -15,19 +15,19 @@
   padding: 5px 20px 7px 17px;
   border-radius: 9999px;
   transition: all 0.2s ease-out;
-  color: #fff;
+  color: var(--nfc-ink-strong);
   white-space: nowrap;
   text-decoration: none;
 
   &:hover {
-    background-color: #070708;
-    color: #fff;
+    background-color: var(--nfc-bg-sunken);
+    color: var(--nfc-ink-strong);
   }
 }
 
 .navLink--current {
-  background-color: #070708;
-  color: #fff;
+  background-color: var(--nfc-bg-sunken);
+  color: var(--nfc-ink-strong);
 }
 
 .navIcon {

@@ -2,19 +2,14 @@
   h2 {
     position: sticky;
     top: 0;
-    background-color: #121215;
-    border-bottom: 1px solid #fbfbfb;
+    background-color: var(--nfc-bg);
+    border-bottom: 1px solid var(--nfc-border-strong);
     font-size: 26px;
     padding-top: 10px;
     transition: transform 0.2s ease-out, font-size 0.2s ease-out;
     width: 100%;
     z-index: 1;
     line-height: 1.2;
-
-    @media (prefers-color-scheme: light) {
-      background-color: #fbfbfb;
-      border-color: #121215;
-    }
   }
 
   p {
@@ -24,23 +19,15 @@
 
   a {
     transition: all 100ms ease-out;
-    color: #6c95ff;
+    color: var(--nfc-link);
     text-decoration: none;
     text-decoration-color: transparent;
     text-underline-offset: 0;
 
-    @media (prefers-color-scheme: light) {
-      color: #1a5bff;
-    }
-
     &:hover {
       text-decoration: underline dashed;
       text-underline-offset: 5px;
-      text-decoration-color: #6c95ff;
-
-      @media (prefers-color-scheme: light) {
-        text-decoration-color: #1a5bff;
-      }
+      text-decoration-color: var(--nfc-link);
     }
   }
 }
