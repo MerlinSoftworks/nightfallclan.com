@@ -1,8 +1,10 @@
 .timeline {
-  --ink: rgba(255, 255, 255, 0.87);
-  --muted: rgba(255, 255, 255, 0.45);
-  --caption: rgba(255, 255, 255, 0.6);
-  --rule: rgba(255, 255, 255, 0.14);
+  // Ink, rules, accent and page follow the site-wide --nfc-* tokens (globals.scss), which already
+  // switch with the OS colour scheme; only the timeline's own tones are set here.
+  --ink: var(--nfc-ink);
+  --muted: var(--nfc-ink-faint);
+  --caption: var(--nfc-ink-muted);
+  --rule: var(--nfc-border);
   // Segment tones: the vertical blocks, then the main bar (raised) and the enlarged first year (recessed).
   --tone-a: #232326;
   --tone-b: #2d2d2d;
@@ -12,22 +14,22 @@
   --inset-tone-b: #232326;
   --bar-shadow: rgba(0, 0, 0, 0.5);
   --bar-edge: rgba(255, 255, 255, 0.1);
-  --accent: #6c95ff;
-  --on-accent: #121215;
+  --accent: var(--nfc-link);
+  --on-accent: var(--nfc-bg);
   --lane-track: rgba(255, 255, 255, 0.06);
   // The group owner is amber throughout: the lane's tint and label, and the solid accent for its
   // active state, pointer and card.
   --owner-fill: rgba(201, 162, 39, 0.38);
   --owner-text: #e8cf7a;
   --owner-accent: #c9a227;
-  --on-owner: #121215;
+  --on-owner: var(--nfc-bg);
   // The funnel's fill and edges fade out towards the enlarged view.
-  --funnel-ink: #ffffff;
+  --funnel-ink: var(--nfc-ink-strong);
   --tooltip-bg: #191a1f;
-  --tooltip-title: #ffffff;
+  --tooltip-title: var(--nfc-ink-strong);
   --tooltip-shadow: rgba(0, 0, 0, 0.35);
-  --ring: #6c95ff;
-  --page: #121215;
+  --ring: var(--nfc-link);
+  --page: var(--nfc-bg);
   // Everything that thickens when pinned eases in together.
   --bold-ease: 150ms ease-out;
 
@@ -37,10 +39,6 @@
   color: var(--ink);
 
   @media (prefers-color-scheme: light) {
-    --ink: #121215;
-    --muted: rgba(18, 18, 21, 0.45);
-    --caption: rgba(18, 18, 21, 0.6);
-    --rule: rgba(18, 18, 21, 0.14);
     --tone-a: #e7e7ec;
     --tone-b: #dcdce3;
     --bar-tone-a: #dcdce3;
@@ -49,19 +47,12 @@
     --inset-tone-b: #e7e7ec;
     --bar-shadow: rgba(0, 0, 0, 0.14);
     --bar-edge: rgba(18, 18, 21, 0.1);
-    --accent: #1a5bff;
-    --on-accent: #fbfbfb;
     --lane-track: rgba(18, 18, 21, 0.06);
     --owner-fill: rgba(146, 106, 10, 0.3);
     --owner-text: #6b4e07;
     --owner-accent: #926a0a;
-    --on-owner: #fbfbfb;
-    --funnel-ink: #121215;
     --tooltip-bg: #f2f2f5;
-    --tooltip-title: #121215;
     --tooltip-shadow: rgba(0, 0, 0, 0.12);
-    --ring: #1a5bff;
-    --page: #fbfbfb;
   }
 }
 
