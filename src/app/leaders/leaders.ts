@@ -20,9 +20,9 @@ export const TERMS: Term[] = [
   // Currently named Malvus on Roblox; shown under the name used while leading.
   { name: "SoccerKing89", alias: "dboot98", start: "2010-03-26", userId: 5904658 },
   { name: "Soccerpr89", termOf: 2, start: "2010-04-04", userId: 785045 },
-  { name: "Vince13579", start: "2010-04-07", userId: 222071 },
+  { name: "vince13579", start: "2010-04-07", userId: 222071 },
   { name: "Soccerpr89", termOf: 3, start: "2010-07-01", userId: 785045 },
-  { name: "BuildXbuild", start: "2010-09-28", userId: 7714875 },
+  { name: "buildXbuild", start: "2010-09-28", userId: 7714875 },
   { name: "Soccerpr89", termOf: 4, start: "2010-12-15", userId: 785045 },
   { name: "Darxia", start: "2011-03-05", userId: 9365056 },
   { name: "XNoBoomX", start: "2011-08-12", userId: 16601274 },
