@@ -23,7 +23,7 @@
     top: 50%;
     left: 0;
     right: 0;
-    border-top: 1px solid rgba(255, 255, 255, 0.14);
+    border-top: 1px solid var(--nfc-border);
     transform: translateY(-50%);
   }
 
@@ -33,8 +33,8 @@
     z-index: 1;
     display: inline-block;
     padding: 0 0.75rem;
-    color: rgba(255, 255, 255, 0.58);
-    background-color: #121215;
+    color: var(--nfc-ink-muted);
+    background-color: var(--nfc-bg);
     font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
     font-size: 0.75rem;
     font-weight: 600;
@@ -61,8 +61,8 @@
 .jumpButton {
   font-family: Helvetica, Arial, sans-serif;
   font-weight: bold;
-  background-color: white;
-  color: #1e1e1e;
+  background-color: var(--nfc-inverse-bg);
+  color: var(--nfc-inverse-ink);
   border: none;
   border-radius: 9999px;
   padding: 0.5rem 1rem;

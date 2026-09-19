@@ -4,9 +4,9 @@
   flex-direction: column;
   width: 320px;
   border-radius: 12px;
-  background-color: #191a1f;
+  background-color: var(--nfc-bg-elevated);
   font-family: Helvetica, Arial, sans-serif;
-  color: rgba(255, 255, 255, 0.87);
+  color: var(--nfc-ink);
   position: fixed;
   right: 12px;
   top: 74px;
@@ -48,14 +48,14 @@
   height: 42px;
   border: none;
   border-radius: 50%;
-  background: #f2f4ff;
-  color: #121215;
+  background: var(--nfc-inverse-bg);
+  color: var(--nfc-inverse-ink);
   padding: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 8px 20px var(--nfc-shadow);
 
   @media (min-width: 1000px) {
     display: none;
@@ -118,8 +118,8 @@
   height: 100%;
   object-fit: cover;
   border-radius: 12px 12px 0 0;
-  filter: brightness(0.4) blur(4px);
-  opacity: 0.6;
+  filter: brightness(var(--nfc-fort-brightness)) blur(4px);
+  opacity: var(--nfc-fort-opacity);
   will-change: transform, opacity, filter;
 }
 
@@ -176,19 +176,19 @@
   font-size: 16px;
   font-weight: 600;
   margin: 0 0 16px;
-  color: #fff;
+  color: var(--nfc-ink-strong);
 }
 
 .label {
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: rgba(255, 255, 255, 0.45);
+  color: var(--nfc-ink-faint);
 }
 
 .value {
   font-size: 14px;
-  color: rgba(255, 255, 255, 0.87);
+  color: var(--nfc-ink);
 }
 
 .valueSwap {
@@ -199,7 +199,7 @@
 .valueLayer {
   display: block;
   font-size: 14px;
-  color: rgba(255, 255, 255, 0.87);
+  color: var(--nfc-ink);
   transform-origin: left center;
   will-change: transform, opacity, filter;
 }
@@ -224,7 +224,7 @@
 .descriptionBody {
   font-size: 13px;
   line-height: 1.5;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--nfc-ink-muted);
   text-align: left;
   margin: 0;
   padding: 20px;
@@ -257,18 +257,18 @@
   from {
     opacity: 0;
     transform: scale(1.06);
-    filter: brightness(0.3) blur(7px);
+    filter: brightness(var(--nfc-fort-brightness)) blur(7px);
   }
   to {
-    opacity: 0.6;
+    opacity: var(--nfc-fort-opacity);
     transform: scale(1);
-    filter: brightness(0.4) blur(4px);
+    filter: brightness(var(--nfc-fort-brightness)) blur(4px);
   }
 }
 
 @keyframes fortOut {
   from {
-    opacity: 0.6;
+    opacity: var(--nfc-fort-opacity);
     transform: scale(1);
   }
   to {
