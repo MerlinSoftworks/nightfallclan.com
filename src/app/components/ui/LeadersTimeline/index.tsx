@@ -16,6 +16,7 @@ import { useRouter } from "next/navigation";
 import { Inter } from "next/font/google";
 import { useSearch } from "@context/SearchContext";
 import { KeyIcon, PinIcon, PointerIcon } from "@icons";
+import { useTouchInput } from "@hooks/useTouchInput";
 import { CALLOUT_TERMS } from "@/app/leaders/leaders";
 import type { Portraits } from "@/app/leaders/portraits";
 import { buildTimeline, type TimelineTerm } from "@/app/leaders/timeline";
@@ -129,6 +130,7 @@ function Tooltip({
   total,
   style,
   pinned = false,
+  unpinButton = true,
   className = "",
   label,
   portrait,
@@ -143,6 +145,8 @@ function Tooltip({
   total: number;
   style: CSSProperties;
   pinned?: boolean;
+  /** Whether a pinned card carries its unpin button; touchscreen visitors, who unpin by tapping, go without. */
+  unpinButton?: boolean;
   className?: string;
   /** Footer text; defaults to the term's place in the sequence. */
   label?: string;
@@ -181,7 +185,7 @@ function Tooltip({
           </svg>
         )}
       </div>
-      {pinned && (
+      {pinned && unpinButton && (
         <button
           type="button"
           className={styles.unpinBtn}
@@ -303,6 +307,8 @@ export default function LeadersTimeline({
   const cardRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<HTMLDivElement>(null);
   const pinTip = usePinTip(cardRef, chartRef);
+  // A touchscreen visitor pins and unpins by tapping, so their cards go without the unpin button.
+  const touch = useTouchInput();
 
   // While something is pinned, hovering other segments or callouts doesn't take over.
   const select = (t: Indexed, via: Via, force = false) => () => {
@@ -673,6 +679,7 @@ export default function LeadersTimeline({
               portrait={portraitOf(hSel)}
               total={terms.length}
               pinned={isPinned(hSel)}
+              unpinButton={!touch}
               onUnpin={unpinFromCard}
               onMouseEnter={enterTooltip}
               onMouseLeave={leaveTooltip}
@@ -692,6 +699,7 @@ export default function LeadersTimeline({
               total={terms.length}
               label="Group owner"
               pinned={isPinned(ownerCard)}
+              unpinButton={!touch}
               className={styles.tooltipOwner}
               onUnpin={unpinFromCard}
               onMouseEnter={enterTooltip}
@@ -807,6 +815,7 @@ export default function LeadersTimeline({
                 total={terms.length}
                 label="Group owner"
                 pinned
+                unpinButton={!touch}
                 className={`${styles.tooltipMobile} ${styles.tooltipOwner}`}
                 style={{}}
                 onUnpin={() => setVerticalSelected(null)}
@@ -816,7 +825,10 @@ export default function LeadersTimeline({
         )}
         {vSel && (
           <>
-            {/* A tap is a pin on touch screens: the card keeps the pinned look and closes from its pin button. */}
+            {/*
+              A tap is a pin: the card keeps the pinned look and closes from its pin button, or, on a
+              touchscreen (which goes without the button), by tapping the term again.
+            */}
             <div className={styles.vCardTrack} style={{ top: vSel.top, height: vSel.height + vCardHeight - CARD_HANDOFF }}>
               <div className={styles.vCardSticky} ref={vCardRef}>
                 <div className={styles.vPointer} />
@@ -825,6 +837,7 @@ export default function LeadersTimeline({
                   portrait={portraitOf(vSel)}
                   total={terms.length}
                   pinned
+                  unpinButton={!touch}
                   className={styles.tooltipMobile}
                   style={{}}
                   onUnpin={() => setVerticalSelected(null)}
