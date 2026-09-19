@@ -135,27 +135,6 @@ function bucketTimestamps(
   return result;
 }
 
-function formatDuration(ms: number): string {
-  const seconds = Math.floor(ms / 1000);
-  const minutes = Math.floor(seconds / 60);
-  const hours = Math.floor(minutes / 60);
-  const days = Math.floor(hours / 24);
-  const years = Math.floor(days / 365);
-  const remDays = days % 365;
-  const remHours = hours % 24;
-  const remMinutes = minutes % 60;
-  const parts: string[] = [];
-  if (years) parts.push(`${years}y`);
-  if (remDays) parts.push(`${remDays}d`);
-  if (remHours) parts.push(`${remHours}h`);
-  if (remMinutes) parts.push(`${remMinutes}m`);
-  return parts.join(" ") || "0m";
-}
-
-function intervalLabel(ms: number): string {
-  return formatDuration(ms) + "/bucket";
-}
-
 // ─── Component ───────────────────────────────────────────────────────────────
 
 const MINIMAP_BUCKETS = 100;
@@ -276,25 +255,6 @@ export default function MessageDensityChart() {
     },
     []
   );
-
-  const formatDate = useCallback((ts: number): string => {
-    const d = new Date(ts);
-    const months = [
-      "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
-    ];
-    const M = months[d.getUTCMonth()];
-    const day = d.getUTCDate();
-    const year = d.getUTCFullYear();
-    const h = String(d.getUTCHours()).padStart(2, "0");
-    const m = String(d.getUTCMinutes()).padStart(2, "0");
-    const DAY = 86_400_000;
-    const interval = currentIntervalMsRef.current;
-    if (interval >= 365 * DAY) return `${year}`;
-    if (interval >= 28 * DAY) return `${M} ${year}`;
-    if (interval >= DAY) return `${M} ${day}, ${year}`;
-    return `${M} ${day}, ${year} ${h}:${m}`;
-  }, []);
 
   const persistGraphHistoryState = useCallback(() => {
     if (

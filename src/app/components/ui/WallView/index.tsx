@@ -319,7 +319,11 @@ export default function WallView({ onLatestDateShownChange }: WallViewProps) {
         window.scrollTo({ top: 0 });
       } else {
         const firstPost = document.getElementById(`post-${posts[0].id}`);
-        firstPost ? firstPost.scrollIntoView({ block: "start" }) : window.scrollTo({ top: 0 });
+        if (firstPost) {
+          firstPost.scrollIntoView({ block: "start" });
+        } else {
+          window.scrollTo({ top: 0 });
+        }
       }
     } else {
       // At the very end there's no bottom sentinel - scroll to the page edge.
@@ -328,7 +332,11 @@ export default function WallView({ onLatestDateShownChange }: WallViewProps) {
         window.scrollTo({ top: document.documentElement.scrollHeight });
       } else {
         const lastPost = document.getElementById(`post-${posts[posts.length - 1].id}`);
-        lastPost ? lastPost.scrollIntoView({ block: "end" }) : window.scrollTo({ top: document.documentElement.scrollHeight });
+        if (lastPost) {
+          lastPost.scrollIntoView({ block: "end" });
+        } else {
+          window.scrollTo({ top: document.documentElement.scrollHeight });
+        }
       }
     }
   }, [posts, loading]);

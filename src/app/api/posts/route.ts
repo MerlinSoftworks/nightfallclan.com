@@ -76,7 +76,6 @@ export async function GET(request: NextRequest) {
   const countConditions: string[] = [];
   const queryParams: (string | number)[] = [];
   const countParams: (string | number)[] = [];
-  let usesFts = false;
 
   if (from) {
     conditions.push("p.poster_username LIKE ? COLLATE NOCASE");
@@ -113,7 +112,6 @@ export async function GET(request: NextRequest) {
     const ftsQuery = `"${escaped}"`;
     queryParams.push(ftsQuery);
     countParams.push(ftsQuery);
-    usesFts = true;
   }
 
   const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
