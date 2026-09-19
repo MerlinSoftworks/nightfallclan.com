@@ -121,7 +121,8 @@ h1 {
   }
 }
 
-.history-page-body {
+.history-page-body,
+.leaders-page-body {
   font-family: Georgia, serif;
   font-size: 18px;
   line-height: 1.6;
@@ -134,4 +135,15 @@ h1 {
   @media (min-width: 600px) {
     padding: 50px 30px 60px;
   }
+}
+
+// The leaders timeline spans the same 1000px column as the nav,
+// while its header keeps the History page's content width.
+.leaders-page-body {
+  max-width: 1000px;
+}
+
+.leaders-page-header {
+  max-width: 690px;
+  margin: 0 auto;
 }

@@ -1,0 +1,940 @@
+.timeline {
+  --ink: rgba(255, 255, 255, 0.87);
+  --muted: rgba(255, 255, 255, 0.45);
+  --caption: rgba(255, 255, 255, 0.6);
+  --rule: rgba(255, 255, 255, 0.14);
+  // Segment tones: the vertical blocks, then the main bar (raised) and the enlarged first year (recessed).
+  --tone-a: #232326;
+  --tone-b: #2d2d2d;
+  --bar-tone-a: #2d2d2d;
+  --bar-tone-b: #3d3d3d;
+  --inset-tone-a: #1d1d1d;
+  --inset-tone-b: #232326;
+  --bar-shadow: rgba(0, 0, 0, 0.5);
+  --bar-edge: rgba(255, 255, 255, 0.1);
+  --accent: #6c95ff;
+  --on-accent: #121215;
+  --lane-track: rgba(255, 255, 255, 0.06);
+  // The group owner is amber throughout: the lane's tint and label, and the solid accent for its
+  // active state, pointer and card.
+  --owner-fill: rgba(201, 162, 39, 0.38);
+  --owner-text: #e8cf7a;
+  --owner-accent: #c9a227;
+  --on-owner: #121215;
+  // The funnel's fill and edges fade out towards the enlarged view.
+  --funnel-ink: #ffffff;
+  --tooltip-bg: #191a1f;
+  --tooltip-title: #ffffff;
+  --tooltip-shadow: rgba(0, 0, 0, 0.35);
+  --ring: #6c95ff;
+  --page: #121215;
+  // Everything that thickens when pinned eases in together.
+  --bold-ease: 150ms ease-out;
+
+  margin-top: 35px;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  line-height: 1.35;
+  color: var(--ink);
+
+  @media (prefers-color-scheme: light) {
+    --ink: #121215;
+    --muted: rgba(18, 18, 21, 0.45);
+    --caption: rgba(18, 18, 21, 0.6);
+    --rule: rgba(18, 18, 21, 0.14);
+    --tone-a: #e7e7ec;
+    --tone-b: #dcdce3;
+    --bar-tone-a: #dcdce3;
+    --bar-tone-b: #cbcbd5;
+    --inset-tone-a: #eeeef2;
+    --inset-tone-b: #e7e7ec;
+    --bar-shadow: rgba(0, 0, 0, 0.14);
+    --bar-edge: rgba(18, 18, 21, 0.1);
+    --accent: #1a5bff;
+    --on-accent: #fbfbfb;
+    --lane-track: rgba(18, 18, 21, 0.06);
+    --owner-fill: rgba(146, 106, 10, 0.3);
+    --owner-text: #6b4e07;
+    --owner-accent: #926a0a;
+    --on-owner: #fbfbfb;
+    --funnel-ink: #121215;
+    --tooltip-bg: #f2f2f5;
+    --tooltip-title: #121215;
+    --tooltip-shadow: rgba(0, 0, 0, 0.12);
+    --ring: #1a5bff;
+    --page: #fbfbfb;
+  }
+}
+
+// Shared pieces
+
+// Anything that appears with a selection fades in on the same clock as the colour changes.
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+%fade-in {
+  animation: fade-in var(--bold-ease) both;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
+%reset-button {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  border: 0;
+  margin: 0;
+  padding: 0;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  appearance: none;
+  border-radius: 0;
+}
+
+.toneA {
+  background: var(--tone-a);
+}
+
+.toneB {
+  background: var(--tone-b);
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.tooltip {
+  @extend %fade-in;
+  position: absolute;
+  z-index: 6;
+  width: 268px;
+  box-sizing: border-box;
+  padding: 14px 16px;
+  background: var(--tooltip-bg);
+  border: 1px solid var(--ring);
+  border-radius: 8px;
+  // The pinned state thickens the edge with an inset shadow rather than a wider border,
+  // so the card's text doesn't shift by a pixel.
+  box-shadow:
+    0 8px 20px var(--tooltip-shadow),
+    inset 0 0 0 0 var(--ring);
+  line-height: 1.5;
+  outline: none;
+  transition: box-shadow var(--bold-ease);
+}
+
+.tooltipPinned {
+  box-shadow:
+    0 8px 20px var(--tooltip-shadow),
+    inset 0 0 0 1px var(--ring);
+}
+
+// The group owner's card: its outline, pinned edge, close button, "View wall" button and the
+// name's hover underline all go amber.
+.tooltipOwner {
+  --ring: var(--owner-accent);
+  --accent: var(--owner-accent);
+  --on-accent: var(--on-owner);
+}
+
+// On the vertical timeline the card fills the label column beside the tapped block.
+.tooltipMobile {
+  position: relative;
+  width: auto;
+}
+
+// The avatar bust is scaled to a fixed size and placed so the centre of the face always lands on
+// one point in the empty space beside the dates, whatever the avatar; a vignette centred on that
+// same point keeps the face clear and dissolves everything around it into the panel. The face
+// point and the name row's right padding are tuned together: move the face left and the end of
+// a long name will sit under it.
+.portrait {
+  // Where the face's centre goes: in from the card's right edge, and down from its top.
+  --face-x: 52px;
+  --face-y: 44px;
+  --portrait: 120px;
+  // Roblox frames a bust's face at about 38% of its height.
+  --face-in-portrait: 0.38;
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 160px;
+  border-radius: 0 7px 7px 0; // the card's 8px corners inside its 1px border
+  overflow: hidden;
+  pointer-events: none;
+  background-size: var(--portrait);
+  background-position:
+    right calc(var(--face-x) - var(--portrait) / 2)
+    top calc(var(--face-y) - var(--portrait) * var(--face-in-portrait));
+  background-repeat: no-repeat;
+  // Tone the bust down so a bright avatar doesn't flare against the panel.
+  opacity: 0.7;
+  filter: saturate(0.8) brightness(0.85);
+  -webkit-mask-image: radial-gradient(84px 76px at calc(100% - var(--face-x)) var(--face-y), black 40%, rgba(0, 0, 0, 0.55) 68%, transparent 100%);
+  mask-image: radial-gradient(84px 76px at calc(100% - var(--face-x)) var(--face-y), black 40%, rgba(0, 0, 0, 0.55) 68%, transparent 100%);
+}
+
+// Stands in when a bust is missing: white on the dark card, dark on the light one. Its head
+// sits higher in its box (34%) than a real bust's face, so it gets its own vertical offset.
+.silhouette {
+  position: absolute;
+  top: calc(var(--face-y) - var(--portrait) * 0.34);
+  right: calc(var(--face-x) - var(--portrait) / 2);
+  width: var(--portrait);
+  height: var(--portrait);
+  fill: var(--funnel-ink);
+  opacity: 0.45;
+}
+
+// The card's text paints over the portrait.
+.tooltipName,
+.tooltipDates,
+.tooltipDuration,
+.tooltipTerm,
+.viewWallBtn {
+  position: relative;
+  z-index: 1;
+}
+
+.tooltipName {
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--tooltip-title);
+  padding-right: 52px;
+
+  a {
+    color: inherit;
+    font-weight: inherit;
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline dashed;
+      text-underline-offset: 4px;
+      text-decoration-color: var(--accent);
+    }
+  }
+}
+
+.unpinBtn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  // Above the name row, whose right padding would otherwise cover the button.
+  z-index: 2;
+  display: flex;
+  padding: 3px;
+  border: 0;
+  border-radius: 4px;
+  background: none;
+  color: var(--ring);
+  cursor: pointer;
+  // Drops into place when a card is pinned, with a small overshoot so it catches the eye.
+  animation: pin-in 320ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+
+  &:hover {
+    background: var(--rule);
+  }
+
+  svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
+@keyframes pin-in {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) rotate(-30deg) scale(0.5);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.tooltipAside {
+  font-weight: 400;
+  opacity: 0.55;
+}
+
+.tooltipDates {
+  margin-top: 7px;
+  font-size: 12.5px;
+  color: var(--caption);
+}
+
+.tooltipDuration {
+  margin-top: 2px;
+  font-size: 12.5px;
+  color: var(--ink);
+}
+
+.tooltipFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 10px;
+  padding-top: 10px;
+  // The rule fades out under the bust rather than cutting across it: the bust is too ghosted to
+  // hide a line behind it, so the line stops where the bust's vignette begins.
+  background: linear-gradient(to right, var(--rule) calc(100% - 136px), transparent calc(100% - 96px)) left top / 100% 1px no-repeat;
+}
+
+.tooltipTerm {
+  font-size: 10.5px;
+  letter-spacing: 0.5px;
+  color: var(--muted);
+}
+
+// Same treatment as the graph's "View these posts" button, scaled to the card.
+.viewWallBtn {
+  border: none;
+  border-radius: 9999px;
+  background: var(--accent);
+  color: var(--on-accent);
+  padding: 0.3rem 0.7rem;
+  white-space: nowrap;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.2;
+  cursor: pointer;
+  transition: filter 0.2s ease;
+
+  &:hover:not(:disabled) {
+    filter: brightness(0.9);
+  }
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.8;
+  }
+}
+
+.viewWallBtn__spinner {
+  width: 9px;
+  height: 9px;
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  border-top-color: currentColor;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 0.35rem;
+  vertical-align: text-bottom;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// Horizontal layout
+
+.horizontal {
+  @media (max-width: 767px) {
+    display: none;
+  }
+}
+
+// One row of evenly spaced labels above the bar, each tied to its segment by a leader line.
+.callouts {
+  position: relative;
+  height: 84px;
+}
+
+// Shared by the callouts above the bar and the labels beneath the enlarged view.
+.callout,
+.insetLabelColumn {
+  position: absolute;
+  top: 0;
+  box-sizing: border-box;
+  font-family: var(--font-label), "Helvetica Neue", Helvetica, Arial, sans-serif;
+  cursor: pointer;
+  outline: none;
+  z-index: 1;
+
+  &:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+}
+
+.calloutActive {
+  .calloutName,
+  .insetLabelName {
+    color: var(--ring);
+  }
+}
+
+.calloutName,
+.insetLabelName {
+  transition:
+    color var(--bold-ease),
+    font-weight var(--bold-ease);
+}
+
+.calloutPinned {
+  .calloutName,
+  .insetLabelName {
+    font-weight: 600;
+  }
+}
+
+.callout {
+  padding-right: 6px;
+}
+
+.calloutName {
+  font-size: 11px;
+}
+
+.calloutMeta {
+  font-size: 10px;
+  color: var(--muted);
+}
+
+.calloutLeaders {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 42px;
+  overflow: visible;
+}
+
+// Leader lines for both callout rows; the active colour is nested so it out-ranks the default.
+.calloutLeaders,
+.insetLeaders {
+  path {
+    fill: none;
+    stroke: var(--rule);
+    stroke-width: 1;
+    pointer-events: none;
+    transition:
+      stroke var(--bold-ease),
+      stroke-width var(--bold-ease);
+  }
+
+  // Each line's invisible, wider twin is what's hovered and clicked; a 1px line is too thin to hit.
+  .leaderHit {
+    stroke: transparent;
+    stroke-width: 10;
+    pointer-events: stroke;
+    cursor: pointer;
+    outline: none;
+    transition: none;
+  }
+
+  .calloutLeaderActive {
+    stroke: var(--ring);
+  }
+
+  .bold {
+    stroke-width: 2;
+  }
+}
+
+// Everything below the callouts; positions are measured from the top of the bar.
+.chart {
+  position: relative;
+  height: 400px;
+}
+
+// The main bar stands proud of the page: its own tones, a hairline edge and a drop shadow.
+.bar {
+  --tone-a: var(--bar-tone-a);
+  --tone-b: var(--bar-tone-b);
+
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 62px;
+  background: var(--tone-a);
+  border-radius: 2px;
+  box-shadow:
+    0 12px 30px var(--bar-shadow),
+    inset 0 0 0 1px var(--bar-edge);
+  z-index: 2;
+}
+
+// The data already holds every segment open to 3px at full width; this only guards narrower bars.
+.segment {
+  @extend %reset-button;
+  top: 0;
+  min-width: 3px;
+  height: 62px;
+  justify-content: center;
+  transition: background-color var(--bold-ease);
+}
+
+// The hovered or pinned segment fills solid blue.
+.segmentLit {
+  background: var(--ring);
+}
+
+.segmentNumber {
+  font-size: 10px;
+  letter-spacing: 0.3px;
+  color: var(--ink);
+  opacity: 0.75;
+  transition:
+    color var(--bold-ease),
+    opacity var(--bold-ease);
+
+  .segmentLit & {
+    color: var(--on-accent);
+    opacity: 1;
+  }
+}
+
+// Rings mark segments of the enlarged first year; the main bar fills instead.
+.ring {
+  @extend %fade-in;
+  position: absolute;
+  top: 0;
+  height: 62px;
+  box-sizing: border-box;
+  border: 1px solid var(--ring);
+  border-radius: 2px;
+  pointer-events: none;
+  z-index: 5;
+  transition: border-width var(--bold-ease);
+}
+
+// The pinned term keeps a heavier ring.
+.ringPinned {
+  border-width: 2px;
+}
+
+// Same ring, drawn around a segment of the enlarged first year.
+.ringInset {
+  top: 249px;
+  height: 30px;
+}
+
+.pointer {
+  @extend %fade-in;
+  position: absolute;
+  top: 62px;
+  width: 1px;
+  height: 8px;
+  background: var(--ring);
+  z-index: 5;
+  transition: width var(--bold-ease);
+
+  &.bold {
+    width: 2px;
+  }
+}
+
+// When the card sits above the bar, the pointer does too, spanning the gap up to the card.
+.pointerAbove {
+  top: -10px;
+  height: 10px;
+}
+
+// From the group-owner lane's bottom edge down to its card.
+.pointerOwner {
+  top: 84px;
+  height: 10px;
+  background: var(--owner-accent);
+}
+
+.lane {
+  position: absolute;
+  top: 72px;
+  left: 0;
+  width: 100%;
+  height: 12px;
+  background: var(--lane-track);
+  border-radius: 9999px;
+  z-index: 3;
+}
+
+.laneFill {
+  position: absolute;
+  top: 0;
+  right: 0;
+  height: 12px;
+  display: flex;
+  align-items: center;
+  padding: 0 0 0 10px;
+  box-sizing: border-box;
+  border: 0;
+  margin: 0;
+  font: inherit;
+  cursor: pointer;
+  appearance: none;
+  outline: none;
+  background: var(--owner-fill);
+  border-radius: 9999px;
+  transition: background-color var(--bold-ease);
+
+  &:focus-visible {
+    outline: 2px solid var(--owner-accent);
+    outline-offset: 2px;
+  }
+}
+
+// The hovered or pinned lane fills solid amber, as a segment fills solid blue.
+.laneFillLit {
+  background: var(--owner-accent);
+
+  .laneLabel {
+    color: var(--on-owner);
+  }
+}
+
+.laneLabel {
+  // Nudged down a pixel to sit optically centred in the pill.
+  position: relative;
+  top: 1px;
+  font-size: 9px;
+  line-height: 1;
+  letter-spacing: 0.3px;
+  color: var(--owner-text);
+  white-space: nowrap;
+  transition: color var(--bold-ease);
+}
+
+.years {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 150px;
+  z-index: 1;
+}
+
+.yearTick {
+  position: absolute;
+  top: 92px;
+  width: 1px;
+  height: 6px;
+  background: var(--rule);
+}
+
+.yearLabel {
+  position: absolute;
+  top: 100px;
+  font-size: 10px;
+  color: var(--muted);
+}
+
+.connectorFill,
+.connector {
+  position: absolute;
+  top: 62px;
+  left: 0;
+  width: 100%;
+  height: 187px;
+  z-index: 0;
+  overflow: visible;
+}
+
+// The funnel's fill and stroke are gradients (set on the SVGs themselves); only their ink is themed here.
+.funnelStop {
+  stop-color: var(--funnel-ink);
+}
+
+.connector {
+  line,
+  path {
+    fill: none;
+    stroke-width: 1;
+  }
+}
+
+// Ties an enlarged-view term back to its segment on the main bar.
+.insetLinks {
+  position: absolute;
+  top: 62px;
+  left: 0;
+  width: 100%;
+  height: 187px;
+  overflow: visible;
+  pointer-events: none;
+  z-index: 4;
+
+  path {
+    @extend %fade-in;
+    fill: none;
+    stroke: var(--ring);
+    stroke-width: 1;
+    transition: stroke-width var(--bold-ease);
+  }
+
+  .bold {
+    stroke-width: 2;
+  }
+}
+
+// The enlarged first year sits back from the page, in tones a step darker than the main bar.
+.insetBar {
+  --tone-a: var(--inset-tone-a);
+  --tone-b: var(--inset-tone-b);
+
+  position: absolute;
+  top: 249px;
+  left: 0;
+  width: 100%;
+  height: 30px;
+  background: var(--tone-a);
+  z-index: 2;
+}
+
+.insetSegment {
+  @extend %reset-button;
+  top: 0;
+  min-width: 3px;
+  height: 30px;
+}
+
+// Buttons centre their text by default; the two lines share a left edge instead.
+.insetLabel {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 0 10px;
+  white-space: nowrap;
+  text-align: left;
+  line-height: 1.25;
+}
+
+.insetName {
+  font-size: 11px;
+  color: var(--ink);
+}
+
+.insetDuration {
+  margin-top: 1px;
+  font-size: 9px;
+  color: var(--muted);
+}
+
+.insetLeaders {
+  position: absolute;
+  top: 279px;
+  left: 0;
+  width: 100%;
+  height: 42px;
+  overflow: visible;
+}
+
+.insetLabels {
+  position: absolute;
+  top: 335px;
+  left: 0;
+  width: 100%;
+  height: 32px;
+}
+
+.insetLabelColumn {
+  width: calc(13.2% - 6px);
+}
+
+.insetLabelName {
+  font-size: 11px;
+}
+
+.insetLabelMeta {
+  font-size: 10px;
+  color: var(--muted);
+}
+
+.caption {
+  position: absolute;
+  top: 371px;
+  left: 0;
+  margin: 0;
+  width: 100%;
+  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--caption);
+}
+
+// Vertical layout
+
+.vertical {
+  position: relative;
+  max-width: 375px;
+  margin: 0 auto;
+
+  @media (min-width: 768px) {
+    display: none;
+  }
+}
+
+.vLane {
+  position: absolute;
+  left: 52px;
+  width: 5px;
+  border: 0;
+  padding: 0;
+  background: var(--owner-fill);
+  border-radius: 9999px;
+  cursor: pointer;
+  appearance: none;
+  transition: background-color var(--bold-ease);
+}
+
+.vLaneActive {
+  background: var(--owner-accent);
+}
+
+// Crown marker at the lane's start; tapping it (or the lane) opens the group owner's card.
+// (the marker shows a key: the group is held, not led)
+.vLaneDot {
+  position: absolute;
+  left: 45.5px;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  padding: 0;
+  border-radius: 50%;
+  background: var(--owner-accent);
+  color: var(--on-owner);
+  cursor: pointer;
+  appearance: none;
+  z-index: 5;
+  transition: box-shadow var(--bold-ease);
+
+  svg {
+    width: 10px;
+    height: 10px;
+    stroke-width: 2.5;
+  }
+}
+
+.vLaneDotActive {
+  box-shadow:
+    0 0 0 2px var(--page),
+    0 0 0 4px var(--owner-accent);
+}
+
+.block {
+  @extend %reset-button;
+  left: 68px;
+  width: 34px;
+  justify-content: center;
+  transition: background-color var(--bold-ease);
+}
+
+// The tapped block fills solid blue.
+.blockLit {
+  background: var(--ring);
+}
+
+.blockNumber {
+  font-size: 9.5px;
+  color: var(--ink);
+  opacity: 0.75;
+  transition:
+    color var(--bold-ease),
+    opacity var(--bold-ease);
+
+  .blockLit & {
+    color: var(--on-accent);
+    opacity: 1;
+  }
+}
+
+.blockLabel {
+  position: absolute;
+  left: 112px;
+  right: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  font-family: var(--font-label), "Helvetica Neue", Helvetica, Arial, sans-serif;
+  cursor: pointer;
+}
+
+// The tapped row's name goes blue; no bolding, since the card covers it anyway.
+.blockName,
+.blockNameShort {
+  transition: color var(--bold-ease);
+
+  .blockLabelActive & {
+    color: var(--ring);
+  }
+}
+
+.blockName {
+  font-size: 13.5px;
+  line-height: 1.3;
+}
+
+.blockMeta {
+  margin-top: 2px;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.blockNameShort {
+  font-size: 11.5px;
+  line-height: 1.2;
+}
+
+.vYearLabel {
+  position: absolute;
+  left: 14px;
+  width: 28px;
+  text-align: right;
+  font-size: 9.5px;
+  color: var(--muted);
+}
+
+
+// The card's lane beside the tapped block: spans the block's height, and the card sticks
+// inside it while it's on screen (below the dot and rings, which sit at z-index 5).
+.vCardTrack {
+  @extend %fade-in;
+  position: absolute;
+  left: 112px;
+  right: 0;
+  z-index: 4;
+}
+
+.vCardSticky {
+  position: sticky;
+  top: 12px;
+}
+
+// Joins the card to the tapped block's ring; rides along with the card.
+.vPointer {
+  position: absolute;
+  left: -10px;
+  top: 11px;
+  width: 10px;
+  height: 2px;
+  background: var(--ring);
+}
+
+// From the group-owner lane across the block column to the card.
+.vPointerOwner {
+  left: -55px;
+  width: 55px;
+  background: var(--owner-accent);
+}
