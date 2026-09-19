@@ -5,12 +5,23 @@ import HistoryHeader from "@ui/HistoryHeader";
 import LeadersLogo from "@ui/LeadersLogo";
 import LeadersTimeline from "@ui/LeadersTimeline";
 import { LOGOS, logoOn } from "@/app/utils/logos";
+import type { Portraits } from "./portraits";
 
 /** The header's resting logo, shared with the history page (the favicon keeps the older one). */
 const DEFAULT_LOGO = "/logo-silver.png";
 
 /** The header and the timeline together: the header's logo follows whatever the timeline highlights. */
-export default function LeadersView({ now, title, meta }: { now: string; title: string; meta: ReactNode }) {
+export default function LeadersView({
+  now,
+  title,
+  meta,
+  portraits,
+}: {
+  now: string;
+  title: string;
+  meta: ReactNode;
+  portraits: Portraits;
+}) {
   const [logo, setLogo] = useState(DEFAULT_LOGO);
 
   // On wide screens fetch every logo up front, so the first swap doesn't wait on a download.
@@ -27,7 +38,7 @@ export default function LeadersView({ now, title, meta }: { now: string; title: 
       <div className="leaders-page-header">
         <HistoryHeader title={title} meta={meta} logo={<LeadersLogo src={logo} />} />
       </div>
-      <LeadersTimeline now={now} onHighlight={onHighlight} />
+      <LeadersTimeline now={now} portraits={portraits} onHighlight={onHighlight} />
     </>
   );
 }

@@ -16,6 +16,7 @@ import { Inter } from "next/font/google";
 import { useSearch } from "@context/SearchContext";
 import { CloseIcon, KeyIcon } from "@icons";
 import { CALLOUT_TERMS } from "@/app/leaders/leaders";
+import type { Portraits } from "@/app/leaders/portraits";
 import { buildTimeline, type TimelineTerm } from "@/app/leaders/timeline";
 import styles from "./LeadersTimeline.module.scss";
 
@@ -122,6 +123,7 @@ function Tooltip({
   pinned = false,
   className = "",
   label,
+  portrait,
   onUnpin,
   onClick,
   onMouseEnter,
@@ -135,6 +137,8 @@ function Tooltip({
   className?: string;
   /** Footer text; defaults to the term's place in the sequence. */
   label?: string;
+  /** The leader's Roblox avatar bust; without one the card shows a silhouette. */
+  portrait?: string;
   onUnpin?: () => void;
   onClick?: () => void;
   onMouseEnter?: () => void;
@@ -153,6 +157,19 @@ function Tooltip({
       onBlur={onBlur}
       aria-live="polite"
     >
+      {/* A ghosted portrait filling the card's right side, behind all of the card's text. */}
+      <div
+        className={styles.portrait}
+        style={portrait ? { backgroundImage: `url("${portrait}")` } : undefined}
+        aria-hidden="true"
+      >
+        {!portrait && (
+          <svg className={styles.silhouette} viewBox="0 0 100 100">
+            <circle cx="54" cy="34" r="19" />
+            <path d="M16 104 C 18 76, 34 62, 54 62 S 90 76, 92 104 Z" />
+          </svg>
+        )}
+      </div>
       {pinned && (
         <button
           type="button"
@@ -217,9 +234,12 @@ function ViewWallButton({ term }: { term: CardEntry }) {
 
 export default function LeadersTimeline({
   now,
+  portraits,
   onHighlight,
 }: {
   now: string;
+  /** Roblox user id → avatar-bust URL, fetched on the server. */
+  portraits: Portraits;
   /** Called with the start date of the highlighted term (or the owner's tenure), or null when nothing is. */
   onHighlight?: (start: Date | null) => void;
 }) {
@@ -329,6 +349,7 @@ export default function LeadersTimeline({
     tooltipHovered.current = false;
     deselect();
   };
+  const portraitOf = (t: CardEntry) => portraits[Number(t.profileUrl.match(/\/users\/(\d+)/)?.[1])];
   const tone = (t: TimelineTerm) => (t.index % 2 ? styles.toneA : styles.toneB);
   const isPinned = (t: Indexed) => pinned?.index === t.index;
   const pinnedVia = (t: TimelineTerm, viaInset: boolean) =>
@@ -620,6 +641,7 @@ export default function LeadersTimeline({
           {hSel && (
             <Tooltip
               term={hSel}
+              portrait={portraitOf(hSel)}
               total={terms.length}
               pinned={isPinned(hSel)}
               onUnpin={unpinFromCard}
@@ -636,6 +658,7 @@ export default function LeadersTimeline({
           {hOwner && (
             <Tooltip
               term={ownerCard}
+              portrait={portraitOf(ownerCard)}
               total={terms.length}
               label="Group owner"
               pinned={isPinned(ownerCard)}
@@ -738,6 +761,7 @@ export default function LeadersTimeline({
               <div className={`${styles.vPointer} ${styles.vPointerOwner}`} />
               <Tooltip
                 term={ownerCard}
+                portrait={portraitOf(ownerCard)}
                 total={terms.length}
                 label="Group owner"
                 pinned
@@ -756,6 +780,7 @@ export default function LeadersTimeline({
                 <div className={styles.vPointer} />
                 <Tooltip
                   term={vSel}
+                  portrait={portraitOf(vSel)}
                   total={terms.length}
                   pinned
                   className={styles.tooltipMobile}
