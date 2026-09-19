@@ -15,8 +15,12 @@ const PIN_TIP_FADE = 200;
 /** Once the hint has shown, or anything has been pinned, it stays away for this long. */
 const PIN_TIP_COOLDOWN = 30 * 24 * 60 * 60 * 1000;
 const PIN_TIP_KEY = "nfc:leaders:pin-tip";
+/** Half the hint's height plus a little air: how far its centre sits from the edge it hangs off. */
+const PIN_TIP_CLEARANCE = 17;
 
 type Point = { x: number; y: number };
+/** Where the pointer left the hovered element, and the element itself. */
+type Leave = Point & { el: Element };
 
 /** Where the hint sits in the chart: centre x as a % of its width, y in px from its top. */
 export type PinTip = { x: string; y: number; leaving: boolean };
@@ -50,8 +54,8 @@ const writeSeen = () => {
  */
 export function usePinTip(cardRef: RefObject<HTMLDivElement | null>, chartRef: RefObject<HTMLDivElement | null>) {
   const pointer = useRef<Point | null>(null);
-  // Where the pointer left the hovered element, or null when the hide didn't start from the pointer.
-  const leftAt = useRef<Point | null>(null);
+  // The pointer's exit from the hovered element, or null when the hide didn't start from the pointer.
+  const leftAt = useRef<Leave | null>(null);
   const misses = useRef<number[]>([]);
   const seen = useRef<boolean | null>(null);
   const [tip, setTip] = useState<PinTip | null>(null);
@@ -92,7 +96,7 @@ export function usePinTip(cardRef: RefObject<HTMLDivElement | null>, chartRef: R
     },
     /** Every hide reports how it started: from the pointer leaving (with its event) or otherwise. */
     leave: (e?: MouseEvent<Element>) => {
-      leftAt.current = e ? { x: e.clientX, y: e.clientY } : null;
+      leftAt.current = e ? { x: e.clientX, y: e.clientY, el: e.currentTarget } : null;
     },
     /** An unpinned card is about to hide and is still in the DOM: was the pointer heading for it? */
     hidden: () => {
@@ -108,8 +112,13 @@ export function usePinTip(cardRef: RefObject<HTMLDivElement | null>, chartRef: R
       const now = Date.now();
       misses.current = [...misses.current.filter((t) => now - t < MISS_WINDOW), now];
       if (misses.current.length < MISS_THRESHOLD) return;
+      // The hint hangs just below the term the pointer left, or just above it when the card would
+      // come back over it there (a bar segment's card sits right beneath the bar).
       const box = chart.getBoundingClientRect();
-      show(`${((rect.left + rect.width / 2 - box.left) / box.width) * 100}%`, rect.bottom - box.top);
+      const el = from.el.getBoundingClientRect();
+      const below = el.bottom + 2 * PIN_TIP_CLEARANCE <= rect.top;
+      const y = below ? el.bottom + PIN_TIP_CLEARANCE : el.top - PIN_TIP_CLEARANCE;
+      show(`${((el.left + el.width / 2 - box.left) / box.width) * 100}%`, y - box.top);
     },
     /** Something got pinned: the visitor knows the trick, so the hint goes and stays away. */
     pinned: () => {
