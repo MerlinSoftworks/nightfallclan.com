@@ -7,7 +7,7 @@ import "./globals.scss";
 export const metadata: Metadata = {
   title: "Nightfall Clan",
   icons: {
-    icon: "/logo.png",
+    icon: "/logo-silver.png",
   },
 };
 

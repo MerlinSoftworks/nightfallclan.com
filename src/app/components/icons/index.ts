@@ -1,6 +1,6 @@
 export { default as HistoryIcon } from "./HistoryIcon";
 export { default as LeadersIcon } from "./LeadersIcon";
-export { default as PinIcon } from "./PinIcon";
+export { default as CloseIcon } from "./CloseIcon";
 export { default as KeyIcon } from "./KeyIcon";
 export { default as WallIcon } from "./WallIcon";
 export { default as GraphIcon } from "./GraphIcon";

@@ -3,16 +3,26 @@
   --muted: rgba(255, 255, 255, 0.45);
   --caption: rgba(255, 255, 255, 0.6);
   --rule: rgba(255, 255, 255, 0.14);
+  // Segment tones: the vertical blocks, then the main bar (raised) and the enlarged first year (recessed).
   --tone-a: #232326;
   --tone-b: #2d2d2d;
+  --bar-tone-a: #2d2d2d;
+  --bar-tone-b: #3d3d3d;
+  --inset-tone-a: #1d1d1d;
+  --inset-tone-b: #232326;
+  --bar-shadow: rgba(0, 0, 0, 0.5);
+  --bar-edge: rgba(255, 255, 255, 0.1);
   --accent: #6c95ff;
   --on-accent: #121215;
   --lane-track: rgba(255, 255, 255, 0.06);
-  --lane-fill: rgba(108, 149, 255, 0.22);
-  --lane-start: rgba(108, 149, 255, 0.6);
-  --lane-text: rgb(180, 200, 255);
-  --connector: rgba(255, 255, 255, 0.22);
-  --connector-fill: rgba(255, 255, 255, 0.035);
+  // The group owner is amber throughout: the lane's tint and label, and the solid accent for its
+  // active state, pointer and card.
+  --owner-fill: rgba(201, 162, 39, 0.38);
+  --owner-text: #e8cf7a;
+  --owner-accent: #c9a227;
+  --on-owner: #121215;
+  // The funnel's fill and edges fade out towards the enlarged view.
+  --funnel-ink: #ffffff;
   --tooltip-bg: #191a1f;
   --tooltip-title: #ffffff;
   --tooltip-shadow: rgba(0, 0, 0, 0.35);
@@ -33,14 +43,20 @@
     --rule: rgba(18, 18, 21, 0.14);
     --tone-a: #e7e7ec;
     --tone-b: #dcdce3;
+    --bar-tone-a: #dcdce3;
+    --bar-tone-b: #cbcbd5;
+    --inset-tone-a: #eeeef2;
+    --inset-tone-b: #e7e7ec;
+    --bar-shadow: rgba(0, 0, 0, 0.14);
+    --bar-edge: rgba(18, 18, 21, 0.1);
     --accent: #1a5bff;
     --on-accent: #fbfbfb;
     --lane-track: rgba(18, 18, 21, 0.06);
-    --lane-fill: rgba(26, 91, 255, 0.14);
-    --lane-start: rgba(26, 91, 255, 0.6);
-    --lane-text: #12369c;
-    --connector: rgba(18, 18, 21, 0.25);
-    --connector-fill: rgba(18, 18, 21, 0.035);
+    --owner-fill: rgba(146, 106, 10, 0.3);
+    --owner-text: #6b4e07;
+    --owner-accent: #926a0a;
+    --on-owner: #fbfbfb;
+    --funnel-ink: #121215;
     --tooltip-bg: #f2f2f5;
     --tooltip-title: #121215;
     --tooltip-shadow: rgba(0, 0, 0, 0.12);
@@ -117,6 +133,14 @@
   box-shadow:
     0 8px 20px var(--tooltip-shadow),
     inset 0 0 0 1px var(--ring);
+}
+
+// The group owner's card: its outline, pinned edge, close button, "View wall" button and the
+// name's hover underline all go amber.
+.tooltipOwner {
+  --ring: var(--owner-accent);
+  --accent: var(--owner-accent);
+  --on-accent: var(--on-owner);
 }
 
 // On the vertical timeline the card fills the label column beside the tapped block.
@@ -343,9 +367,20 @@
     fill: none;
     stroke: var(--rule);
     stroke-width: 1;
+    pointer-events: none;
     transition:
       stroke var(--bold-ease),
       stroke-width var(--bold-ease);
+  }
+
+  // Each line's invisible, wider twin is what's hovered and clicked; a 1px line is too thin to hit.
+  .leaderHit {
+    stroke: transparent;
+    stroke-width: 10;
+    pointer-events: stroke;
+    cursor: pointer;
+    outline: none;
+    transition: none;
   }
 
   .calloutLeaderActive {
@@ -363,20 +398,30 @@
   height: 400px;
 }
 
+// The main bar stands proud of the page: its own tones, a hairline edge and a drop shadow.
 .bar {
+  --tone-a: var(--bar-tone-a);
+  --tone-b: var(--bar-tone-b);
+
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
-  height: 46px;
+  height: 62px;
   background: var(--tone-a);
+  border-radius: 2px;
+  box-shadow:
+    0 12px 30px var(--bar-shadow),
+    inset 0 0 0 1px var(--bar-edge);
   z-index: 2;
 }
 
+// The data already holds every segment open to 3px at full width; this only guards narrower bars.
 .segment {
   @extend %reset-button;
   top: 0;
-  height: 46px;
+  min-width: 3px;
+  height: 62px;
   justify-content: center;
   transition: background-color var(--bold-ease);
 }
@@ -406,7 +451,7 @@
   @extend %fade-in;
   position: absolute;
   top: 0;
-  height: 46px;
+  height: 62px;
   box-sizing: border-box;
   border: 1px solid var(--ring);
   border-radius: 2px;
@@ -422,14 +467,14 @@
 
 // Same ring, drawn around a segment of the enlarged first year.
 .ringInset {
-  top: 241px;
-  height: 38px;
+  top: 249px;
+  height: 30px;
 }
 
 .pointer {
   @extend %fade-in;
   position: absolute;
-  top: 46px;
+  top: 62px;
   width: 1px;
   height: 8px;
   background: var(--ring);
@@ -447,9 +492,16 @@
   height: 10px;
 }
 
+// From the group-owner lane's bottom edge down to its card.
+.pointerOwner {
+  top: 84px;
+  height: 10px;
+  background: var(--owner-accent);
+}
+
 .lane {
   position: absolute;
-  top: 56px;
+  top: 72px;
   left: 0;
   width: 100%;
   height: 12px;
@@ -465,18 +517,43 @@
   height: 12px;
   display: flex;
   align-items: center;
-  padding-left: 10px;
+  padding: 0 0 0 10px;
   box-sizing: border-box;
-  background: var(--lane-fill);
+  border: 0;
+  margin: 0;
+  font: inherit;
+  cursor: pointer;
+  appearance: none;
+  outline: none;
+  background: var(--owner-fill);
   border-radius: 9999px;
+  transition: background-color var(--bold-ease);
+
+  &:focus-visible {
+    outline: 2px solid var(--owner-accent);
+    outline-offset: 2px;
+  }
+}
+
+// The hovered or pinned lane fills solid amber, as a segment fills solid blue.
+.laneFillLit {
+  background: var(--owner-accent);
+
+  .laneLabel {
+    color: var(--on-owner);
+  }
 }
 
 .laneLabel {
-  font-size: 8px;
+  // Nudged down a pixel to sit optically centred in the pill.
+  position: relative;
+  top: 1px;
+  font-size: 9px;
   line-height: 1;
   letter-spacing: 0.3px;
-  color: var(--lane-text);
+  color: var(--owner-text);
   white-space: nowrap;
+  transition: color var(--bold-ease);
 }
 
 .years {
@@ -484,13 +561,13 @@
   top: 0;
   left: 0;
   width: 100%;
-  height: 134px;
+  height: 150px;
   z-index: 1;
 }
 
 .yearTick {
   position: absolute;
-  top: 76px;
+  top: 92px;
   width: 1px;
   height: 6px;
   background: var(--rule);
@@ -498,7 +575,7 @@
 
 .yearLabel {
   position: absolute;
-  top: 84px;
+  top: 100px;
   font-size: 10px;
   color: var(--muted);
 }
@@ -506,23 +583,23 @@
 .connectorFill,
 .connector {
   position: absolute;
-  top: 46px;
+  top: 62px;
   left: 0;
   width: 100%;
-  height: 195px;
+  height: 187px;
   z-index: 0;
   overflow: visible;
 }
 
-.connectorFill path {
-  fill: var(--connector-fill);
+// The funnel's fill and stroke are gradients (set on the SVGs themselves); only their ink is themed here.
+.funnelStop {
+  stop-color: var(--funnel-ink);
 }
 
 .connector {
   line,
   path {
     fill: none;
-    stroke: var(--connector);
     stroke-width: 1;
   }
 }
@@ -530,10 +607,10 @@
 // Ties an enlarged-view term back to its segment on the main bar.
 .insetLinks {
   position: absolute;
-  top: 46px;
+  top: 62px;
   left: 0;
   width: 100%;
-  height: 195px;
+  height: 187px;
   overflow: visible;
   pointer-events: none;
   z-index: 4;
@@ -551,12 +628,16 @@
   }
 }
 
+// The enlarged first year sits back from the page, in tones a step darker than the main bar.
 .insetBar {
+  --tone-a: var(--inset-tone-a);
+  --tone-b: var(--inset-tone-b);
+
   position: absolute;
-  top: 241px;
+  top: 249px;
   left: 0;
   width: 100%;
-  height: 38px;
+  height: 30px;
   background: var(--tone-a);
   z-index: 2;
 }
@@ -564,24 +645,29 @@
 .insetSegment {
   @extend %reset-button;
   top: 0;
-  height: 38px;
+  min-width: 3px;
+  height: 30px;
 }
 
+// Buttons centre their text by default; the two lines share a left edge instead.
 .insetLabel {
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
   padding: 0 10px;
   white-space: nowrap;
+  text-align: left;
+  line-height: 1.25;
 }
 
 .insetName {
-  font-size: 12px;
+  font-size: 11px;
   color: var(--ink);
 }
 
 .insetDuration {
-  margin-top: 2px;
-  font-size: 10px;
+  margin-top: 1px;
+  font-size: 9px;
   color: var(--muted);
 }
 
@@ -645,7 +731,7 @@
   width: 5px;
   border: 0;
   padding: 0;
-  background: var(--lane-fill);
+  background: var(--owner-fill);
   border-radius: 9999px;
   cursor: pointer;
   appearance: none;
@@ -653,7 +739,7 @@
 }
 
 .vLaneActive {
-  background: var(--ring);
+  background: var(--owner-accent);
 }
 
 // Crown marker at the lane's start; tapping it (or the lane) opens the group owner's card.
@@ -669,8 +755,8 @@
   border: 0;
   padding: 0;
   border-radius: 50%;
-  background: var(--ring);
-  color: var(--on-accent);
+  background: var(--owner-accent);
+  color: var(--on-owner);
   cursor: pointer;
   appearance: none;
   z-index: 5;
@@ -686,7 +772,7 @@
 .vLaneDotActive {
   box-shadow:
     0 0 0 2px var(--page),
-    0 0 0 4px var(--ring);
+    0 0 0 4px var(--owner-accent);
 }
 
 .block {
@@ -792,4 +878,5 @@
 .vPointerOwner {
   left: -55px;
   width: 55px;
+  background: var(--owner-accent);
 }

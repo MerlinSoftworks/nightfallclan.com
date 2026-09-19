@@ -20,10 +20,13 @@ const historyMeta = (
 export default function HistoryHeader({
   title = "A Brief History of Nightfall Clan",
   meta = historyMeta,
+  logo,
 }: {
   title?: string;
   /** One or more lines rendered under the title; wrap each in `metaClassName`. */
   meta?: ReactNode;
+  /** Replaces the plain logo image, e.g. with one that follows the page's state. */
+  logo?: ReactNode;
 }) {
   return (
     <div className={styles.header}>
@@ -38,8 +41,10 @@ export default function HistoryHeader({
           title="NFC on Roblox"
           href="https://www.roblox.com/communities/85654/Nightfall-Clan"
         >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img className={styles.logo} src="/logo.png" alt="Nightfall Clan logo" />
+          {logo ?? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img className={styles.logo} src="/logo-silver.png" alt="Nightfall Clan logo" />
+          )}
         </a>
       </span>
     </div>

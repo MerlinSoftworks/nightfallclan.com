@@ -2,6 +2,7 @@
 
 import {
   useEffect,
+  useId,
   useLayoutEffect,
   useMemo,
   useRef,
@@ -13,13 +14,13 @@ import {
 import { useRouter } from "next/navigation";
 import { Inter } from "next/font/google";
 import { useSearch } from "@context/SearchContext";
-import { KeyIcon, PinIcon } from "@icons";
+import { CloseIcon, KeyIcon } from "@icons";
 import { CALLOUT_TERMS } from "@/app/leaders/leaders";
 import { buildTimeline, type TimelineTerm } from "@/app/leaders/timeline";
 import styles from "./LeadersTimeline.module.scss";
 
 /** Segments narrower than this (as % of the bar) don't show their term number. */
-const MIN_NUMBERED_WIDTH = 2.4;
+const MIN_NUMBERED_WIDTH = 2.3;
 /** Enlarged first-year segments narrower than this (as % of the inset) get a label below instead. */
 const MIN_INSET_LABEL_WIDTH = 15;
 /** Vertical blocks at least this tall (px) get a two-line label. */
@@ -29,6 +30,9 @@ const INSET_LABEL_STEP = 13.2;
 const TOOLTIP_WIDTH = 268;
 /** The pointer must meet the card's straight edge, clear of its rounded corners. */
 const TOOLTIP_CORNER = 12;
+/** Card tops (px from the bar's top) when opened from the bar and from the group-owner lane. */
+const CARD_BELOW_BAR = 70;
+const CARD_BELOW_LANE = 94;
 /** Grace period (ms) for the pointer to cross from a segment onto its card. */
 const HIDE_DELAY = 150;
 /** Terms narrower than this (as % of the bar, ~10px at full width) get a callout of their own. */
@@ -37,6 +41,8 @@ const MAX_TINY_WIDTH = 1;
 const CALLOUT_LINE_OFFSET = 0.7;
 /** Where the funnel's top edge sits in the link-line SVG (px from the bar's bottom). */
 const FUNNEL_TOP = 65;
+/** Height of the link-line SVG: from the bar's bottom down to the enlarged first year. */
+const FUNNEL_HEIGHT = 187;
 /** Straight run (px) a leader line makes before leaving a segment, shared by every callout line. */
 const POINTER_LENGTH = 12;
 /** On the vertical timeline, a card lets go once the tapped item's bottom edge gets this close to the card's top. */
@@ -96,6 +102,12 @@ const INSET_SEGMENT: Via = { viaCallout: false, viaInset: true };
 const INSET_CALLOUT: Via = { viaCallout: true, viaInset: true };
 /** Identifies a pinnable element (term + how it was reached), stored on it as `data-pin`. */
 const pinKey = (index: number, via: Via) => `${index}:${via.viaCallout ? 1 : 0}${via.viaInset ? 1 : 0}`;
+/** Anything that can be selected: a term, or the group owner (index 0). */
+type Indexed = { index: number };
+/** Where a card's left edge goes: centred on `center`, kept inside the timeline, but always
+ *  overlapping the pointer by at least a corner's width so the pointer lands on a straight edge. */
+const cardLeft = (center: string) =>
+  `clamp(min(0px, ${center} - ${TOOLTIP_CORNER}px), ${center} - ${TOOLTIP_WIDTH / 2}px, max(100% - ${TOOLTIP_WIDTH}px, ${center} + ${TOOLTIP_CORNER - TOOLTIP_WIDTH}px))`;
 
 /** What a card needs to show; every term qualifies, and so does the group owner. */
 type CardEntry = Pick<
@@ -152,7 +164,7 @@ function Tooltip({
             onUnpin?.();
           }}
         >
-          <PinIcon />
+          <CloseIcon />
         </button>
       )}
       <div className={styles.tooltipName}>
@@ -203,7 +215,14 @@ function ViewWallButton({ term }: { term: CardEntry }) {
   );
 }
 
-export default function LeadersTimeline({ now }: { now: string }) {
+export default function LeadersTimeline({
+  now,
+  onHighlight,
+}: {
+  now: string;
+  /** Called with the start date of the highlighted term (or the owner's tenure), or null when nothing is. */
+  onHighlight?: (start: Date | null) => void;
+}) {
   // The page is prerendered with the build's date; switch to the visitor's own date once mounted.
   const [today, setToday] = useState(now);
   useEffect(() => {
@@ -217,12 +236,22 @@ export default function LeadersTimeline({ now }: { now: string }) {
   const [pinned, setPinned] = useState<Selection>(null);
   const [verticalSelected, setVerticalSelected] = useState<number | "owner" | null>(null);
 
-  const hSel = horizontalSelected ? terms[horizontalSelected.index - 1] : null;
+  const hSel = horizontalSelected && horizontalSelected.index > 0 ? terms[horizontalSelected.index - 1] : null;
   const hCenter = hSel ? `${hSel.left + hSel.width / 2}%` : "0%";
+  // The group owner's lane is selectable on the horizontal timeline too, as index 0; its card and
+  // pointer sit at the midpoint of the lane's fill, which runs from the owner's start to today.
+  const hOwner = horizontalSelected?.index === 0;
+  const ownerCenter = `${(owner.left + 100) / 2}%`;
   const vSel = typeof verticalSelected === "number" ? terms[verticalSelected - 1] : null;
   const vOwner = verticalSelected === "owner";
   const ownerCard: CardEntry = { ...owner, aside: "", current: true, index: 0 };
   const toggleOwner = () => setVerticalSelected(vOwner ? null : "owner");
+  // Whichever layout is showing, tell the page what's highlighted (its start date, by value).
+  const highlightedTime =
+    (hSel?.start ?? (hOwner ? owner.start : null) ?? vSel?.start ?? (vOwner ? owner.start : null))?.getTime() ?? null;
+  useEffect(() => {
+    onHighlight?.(highlightedTime === null ? null : new Date(highlightedTime));
+  }, [highlightedTime, onHighlight]);
   // The mobile card's track runs past what was tapped by the card's height less a hand-off
   // margin, so the card keeps sticking until the block's bottom edge comes within that margin
   // of the pointer, then scrolls away with it — whatever the block's height.
@@ -242,7 +271,7 @@ export default function LeadersTimeline({ now }: { now: string }) {
   useEffect(() => () => clearTimeout(hideTimer.current), []);
 
   // While something is pinned, hovering other segments or callouts doesn't take over.
-  const select = (t: TimelineTerm, via: Via, force = false) => () => {
+  const select = (t: Indexed, via: Via, force = false) => () => {
     clearTimeout(hideTimer.current);
     if (pinnedRef.current && !force) return;
     setHorizontalSelected({ index: t.index, ...via });
@@ -258,7 +287,7 @@ export default function LeadersTimeline({ now }: { now: string }) {
     setPinned(null);
   };
   // Clicking pins; clicking the pinned thing again releases it (the card stays while hovered).
-  const pin = (t: TimelineTerm, via: Via) => (e: MouseEvent<HTMLElement>) => {
+  const pin = (t: Indexed, via: Via) => (e: MouseEvent<Element>) => {
     const current = pinnedRef.current;
     if (current?.index === t.index && current.viaCallout === via.viaCallout && current.viaInset === via.viaInset) {
       releasePin();
@@ -267,12 +296,12 @@ export default function LeadersTimeline({ now }: { now: string }) {
     const next = { index: t.index, ...via };
     pinnedRef.current = next;
     setPinned(next);
-    e.currentTarget.focus();
+    (e.currentTarget as HTMLElement).focus();
     select(t, via, true)();
   };
   const inTooltip = (el: EventTarget | null) => !!(el as HTMLElement | null)?.closest?.(`.${styles.tooltip}`);
   // Focus moving into the card (e.g. onto "View wall" or the unpin button) keeps the pin and the card.
-  const unpin = (t: TimelineTerm) => (e: FocusEvent<HTMLElement>) => {
+  const unpin = (t: Indexed) => (e: FocusEvent<Element>) => {
     if (inTooltip(e.relatedTarget)) return;
     if (pinnedRef.current?.index === t.index) releasePin();
     deselect();
@@ -301,7 +330,7 @@ export default function LeadersTimeline({ now }: { now: string }) {
     deselect();
   };
   const tone = (t: TimelineTerm) => (t.index % 2 ? styles.toneA : styles.toneB);
-  const isPinned = (t: TimelineTerm) => pinned?.index === t.index;
+  const isPinned = (t: Indexed) => pinned?.index === t.index;
   const pinnedVia = (t: TimelineTerm, viaInset: boolean) =>
     pinned?.viaCallout && pinned.viaInset === viaInset && pinned.index === t.index;
   // A callout lights up when it (not its segment) is what's highlighting the term.
@@ -315,11 +344,15 @@ export default function LeadersTimeline({ now }: { now: string }) {
   // The funnel's top-right corner, and the point one corner radius down its sloping side.
   const funnel = useMemo(() => {
     const x = firstYearWidth * 10;
-    const len = Math.hypot(1000 - x, 195 - FUNNEL_TOP);
-    return { x, bx: x + ((1000 - x) / len) * CORNER_RADIUS, by: FUNNEL_TOP + ((195 - FUNNEL_TOP) / len) * CORNER_RADIUS };
+    const len = Math.hypot(1000 - x, FUNNEL_HEIGHT - FUNNEL_TOP);
+    return { x, bx: x + ((1000 - x) / len) * CORNER_RADIUS, by: FUNNEL_TOP + ((FUNNEL_HEIGHT - FUNNEL_TOP) / len) * CORNER_RADIUS };
   }, [firstYearWidth]);
+  // The funnel's fill and edges fade downwards; the gradients are shared by both of its SVGs.
+  const funnelId = useId().replace(/[^a-zA-Z0-9-]/g, "");
+  const funnelFill = `url(#${funnelId}-fill)`;
+  const funnelLine = `url(#${funnelId}-line)`;
   // Everything blue drawn for a pinned term is heavier, so the pin reads at a glance.
-  const bold = (t: TimelineTerm) => (isPinned(t) ? styles.bold : "");
+  const bold = (t: Indexed) => (isPinned(t) ? styles.bold : "");
 
   return (
     <div className={`${styles.timeline} ${labelFont.variable}`}>
@@ -353,13 +386,27 @@ export default function LeadersTimeline({ now }: { now: string }) {
             {callouts.map((t, i) => {
               const labelX = ((i * 100) / callouts.length + CALLOUT_LINE_OFFSET) * 10;
               const center = (t.left + t.width / 2) * 10;
+              const d = roundedPath([[labelX, 0], [labelX, POINTER_LENGTH], [center, 42 - POINTER_LENGTH], [center, 42]], CORNER_RADIUS);
               return (
-                <path
-                  key={t.index}
-                  className={calloutActive(t, false) ? `${styles.calloutLeaderActive} ${bold(t)}` : ""}
-                  vectorEffect="non-scaling-stroke"
-                  d={roundedPath([[labelX, 0], [labelX, POINTER_LENGTH], [center, 42 - POINTER_LENGTH], [center, 42]], CORNER_RADIUS)}
-                />
+                <g key={t.index}>
+                  <path
+                    className={calloutActive(t, false) ? `${styles.calloutLeaderActive} ${bold(t)}` : ""}
+                    vectorEffect="non-scaling-stroke"
+                    d={d}
+                  />
+                  {/* The line is a second way to reach its callout: same hover, same click-to-pin. */}
+                  <path
+                    className={styles.leaderHit}
+                    vectorEffect="non-scaling-stroke"
+                    d={d}
+                    tabIndex={-1}
+                    data-pin={pinKey(t.index, CALLOUT)}
+                    onMouseEnter={select(t, CALLOUT)}
+                    onMouseLeave={deselect}
+                    onClick={pin(t, CALLOUT)}
+                    onBlur={unpin(t)}
+                  />
+                </g>
               );
             })}
           </svg>
@@ -396,13 +443,31 @@ export default function LeadersTimeline({ now }: { now: string }) {
             </>
           )}
 
+          {/* The group-owner lane behaves like a segment: hover for the card, click to pin it. */}
           <div className={styles.lane}>
-            <div className={styles.laneFill} style={{ left: `${owner.left}%` }}>
+            <button
+              type="button"
+              aria-label={`${owner.name}, group owner since ${owner.since}`}
+              className={`${styles.laneFill} ${hOwner ? styles.laneFillLit : ""}`}
+              style={{ left: `${owner.left}%` }}
+              data-pin={pinKey(0, SEGMENT)}
+              onMouseEnter={select(ownerCard, SEGMENT)}
+              onMouseLeave={deselect}
+              onFocus={select(ownerCard, SEGMENT)}
+              onClick={pin(ownerCard, SEGMENT)}
+              onBlur={unpin(ownerCard)}
+            >
               <span className={styles.laneLabel}>
                 {owner.name}, group owner since {owner.since}
               </span>
-            </div>
+            </button>
           </div>
+          {hOwner && (
+            <div
+              className={`${styles.pointer} ${styles.pointerOwner} ${bold(ownerCard)}`}
+              style={{ left: `calc(${ownerCenter} - ${isPinned(ownerCard) ? 1 : 0.5}px)` }}
+            />
+          )}
 
           <div className={styles.years} aria-hidden="true">
             <div className={styles.yearLabel} style={{ left: 0 }}>
@@ -418,21 +483,34 @@ export default function LeadersTimeline({ now }: { now: string }) {
             ))}
           </div>
 
-          <svg className={styles.connectorFill} viewBox="0 0 1000 195" preserveAspectRatio="none" aria-hidden="true">
-            <path d={`M 0 ${FUNNEL_TOP} L ${funnel.x - 2} ${FUNNEL_TOP} Q ${funnel.x} ${FUNNEL_TOP} ${funnel.bx} ${funnel.by} L 1000 195 L 0 195 Z`} />
+          <svg className={styles.connectorFill} viewBox={`0 0 1000 ${FUNNEL_HEIGHT}`} preserveAspectRatio="none" aria-hidden="true">
+            <defs>
+              <linearGradient id={`${funnelId}-fill`} gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2={FUNNEL_HEIGHT}>
+                <stop className={styles.funnelStop} offset="0" stopOpacity="0.075" />
+                <stop className={styles.funnelStop} offset="1" stopOpacity="0.008" />
+              </linearGradient>
+              <linearGradient id={`${funnelId}-line`} gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2={FUNNEL_HEIGHT}>
+                <stop className={styles.funnelStop} offset="0" stopOpacity="0.3" />
+                <stop className={styles.funnelStop} offset="1" stopOpacity="0.07" />
+              </linearGradient>
+            </defs>
+            <path
+              fill={funnelFill}
+              d={`M 0 ${FUNNEL_TOP} L ${funnel.x - 2} ${FUNNEL_TOP} Q ${funnel.x} ${FUNNEL_TOP} ${funnel.bx} ${funnel.by} L 1000 ${FUNNEL_HEIGHT} L 0 ${FUNNEL_HEIGHT} Z`}
+            />
           </svg>
-          <svg className={styles.connector} viewBox="0 0 1000 195" preserveAspectRatio="none" aria-hidden="true">
+          <svg className={styles.connector} viewBox={`0 0 1000 ${FUNNEL_HEIGHT}`} preserveAspectRatio="none" aria-hidden="true" stroke={funnelLine}>
             <line x1="0.5" y1="0" x2="0.5" y2={FUNNEL_TOP} strokeDasharray="2 3" vectorEffect="non-scaling-stroke" />
             <line x1={funnel.x} y1="0" x2={funnel.x} y2={FUNNEL_TOP - CORNER_RADIUS} strokeDasharray="2 3" vectorEffect="non-scaling-stroke" />
-            <line x1="0.5" y1={FUNNEL_TOP} x2="0.5" y2="195" vectorEffect="non-scaling-stroke" />
+            <line x1="0.5" y1={FUNNEL_TOP} x2="0.5" y2={FUNNEL_HEIGHT} vectorEffect="non-scaling-stroke" />
             {/* The dashed edge rounds into the funnel's sloping side, like every other bend. */}
             <path
-              d={`M ${funnel.x} ${FUNNEL_TOP - CORNER_RADIUS} Q ${funnel.x} ${FUNNEL_TOP} ${funnel.bx} ${funnel.by} L 1000 195`}
+              d={`M ${funnel.x} ${FUNNEL_TOP - CORNER_RADIUS} Q ${funnel.x} ${FUNNEL_TOP} ${funnel.bx} ${funnel.by} L 1000 ${FUNNEL_HEIGHT}`}
               vectorEffect="non-scaling-stroke"
             />
           </svg>
 
-          <svg className={styles.insetLinks} viewBox="0 0 1000 195" preserveAspectRatio="none" aria-hidden="true">
+          <svg className={styles.insetLinks} viewBox={`0 0 1000 ${FUNNEL_HEIGHT}`} preserveAspectRatio="none" aria-hidden="true">
             {insetLinked.map((t) => {
               const mainX = (t.left + t.width / 2) * 10;
               const insetX = (t.insetLeft! + t.insetWidth! / 2) * 10;
@@ -443,7 +521,7 @@ export default function LeadersTimeline({ now }: { now: string }) {
                   key={t.index}
                   className={bold(t)}
                   vectorEffect="non-scaling-stroke"
-                  d={roundedPath([[insetX, 195], [insetX, 195 - POINTER_LENGTH], [mainX, FUNNEL_TOP], [mainX, 0]], CORNER_RADIUS)}
+                  d={roundedPath([[insetX, FUNNEL_HEIGHT], [insetX, FUNNEL_HEIGHT - POINTER_LENGTH], [mainX, FUNNEL_TOP], [mainX, 0]], CORNER_RADIUS)}
                 />
               );
             })}
@@ -489,13 +567,26 @@ export default function LeadersTimeline({ now }: { now: string }) {
             {tiny.map((t, i) => {
               const center = (t.insetLeft! + t.insetWidth! / 2) * 10;
               const labelX = (i * INSET_LABEL_STEP + CALLOUT_LINE_OFFSET) * 10;
+              const d = roundedPath([[center, 0], [center, POINTER_LENGTH], [labelX, 42 - POINTER_LENGTH], [labelX, 42]], CORNER_RADIUS);
               return (
-                <path
-                  key={t.index}
-                  className={calloutActive(t, true) ? `${styles.calloutLeaderActive} ${bold(t)}` : ""}
-                  vectorEffect="non-scaling-stroke"
-                  d={roundedPath([[center, 0], [center, POINTER_LENGTH], [labelX, 42 - POINTER_LENGTH], [labelX, 42]], CORNER_RADIUS)}
-                />
+                <g key={t.index}>
+                  <path
+                    className={calloutActive(t, true) ? `${styles.calloutLeaderActive} ${bold(t)}` : ""}
+                    vectorEffect="non-scaling-stroke"
+                    d={d}
+                  />
+                  <path
+                    className={styles.leaderHit}
+                    vectorEffect="non-scaling-stroke"
+                    d={d}
+                    tabIndex={-1}
+                    data-pin={pinKey(t.index, INSET_CALLOUT)}
+                    onMouseEnter={select(t, INSET_CALLOUT)}
+                    onMouseLeave={deselect}
+                    onClick={pin(t, INSET_CALLOUT)}
+                    onBlur={unpin(t)}
+                  />
+                </g>
               );
             })}
           </svg>
@@ -536,12 +627,24 @@ export default function LeadersTimeline({ now }: { now: string }) {
               onMouseLeave={leaveTooltip}
               onBlur={leaveTooltipFocus}
               style={{
-                // Centred on the term, kept inside the timeline, but always overlapping the pointer
-                // by at least a corner's width so the pointer lands on a straight edge.
-                left: `clamp(min(0px, ${hCenter} - ${TOOLTIP_CORNER}px), ${hCenter} - ${TOOLTIP_WIDTH / 2}px, max(100% - ${TOOLTIP_WIDTH}px, ${hCenter} + ${TOOLTIP_CORNER - TOOLTIP_WIDTH}px))`,
+                left: cardLeft(hCenter),
                 // From the enlarged view, the card sits above the bar instead of over the years.
-                ...(horizontalSelected?.viaInset ? { bottom: "calc(100% + 10px)" } : { top: 54 }),
+                ...(horizontalSelected?.viaInset ? { bottom: "calc(100% + 10px)" } : { top: CARD_BELOW_BAR }),
               }}
+            />
+          )}
+          {hOwner && (
+            <Tooltip
+              term={ownerCard}
+              total={terms.length}
+              label="Group owner"
+              pinned={isPinned(ownerCard)}
+              className={styles.tooltipOwner}
+              onUnpin={unpinFromCard}
+              onMouseEnter={enterTooltip}
+              onMouseLeave={leaveTooltip}
+              onBlur={leaveTooltipFocus}
+              style={{ left: cardLeft(ownerCenter), top: CARD_BELOW_LANE }}
             />
           )}
         </div>
@@ -638,7 +741,7 @@ export default function LeadersTimeline({ now }: { now: string }) {
                 total={terms.length}
                 label="Group owner"
                 pinned
-                className={styles.tooltipMobile}
+                className={`${styles.tooltipMobile} ${styles.tooltipOwner}`}
                 style={{}}
                 onUnpin={() => setVerticalSelected(null)}
               />
