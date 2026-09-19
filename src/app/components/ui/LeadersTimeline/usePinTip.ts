@@ -98,8 +98,13 @@ export function usePinTip(cardRef: RefObject<HTMLDivElement | null>, chartRef: R
     leave: (e?: MouseEvent<Element>) => {
       leftAt.current = e ? { x: e.clientX, y: e.clientY, el: e.currentTarget } : null;
     },
-    /** An unpinned card is about to hide and is still in the DOM: was the pointer heading for it? */
-    hidden: () => {
+    /**
+     * An unpinned card is about to go, and is still in the DOM: was the pointer heading for it?
+     * It goes either because the grace period ran out ("hidden") or because the pointer crossed
+     * onto another term on the way, say the bar beneath a callout ("switched"). Only the first
+     * also counts a pointer that merely stopped short of the card.
+     */
+    lost: (how: "hidden" | "switched") => {
       const from = leftAt.current;
       leftAt.current = null;
       const card = cardRef.current;
@@ -108,7 +113,8 @@ export function usePinTip(cardRef: RefObject<HTMLDivElement | null>, chartRef: R
       if (!from || !card || !chart || !at || isSeen()) return;
       const rect = card.getBoundingClientRect();
       const after = distance(at, rect);
-      if (after > MISS_NEAR && distance(from, rect) - after < MISS_APPROACH) return;
+      const near = how === "hidden" && after <= MISS_NEAR;
+      if (!near && distance(from, rect) - after < MISS_APPROACH) return;
       const now = Date.now();
       misses.current = [...misses.current.filter((t) => now - t < MISS_WINDOW), now];
       if (misses.current.length < MISS_THRESHOLD) return;
