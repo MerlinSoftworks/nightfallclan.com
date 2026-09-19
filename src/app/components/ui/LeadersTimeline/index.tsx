@@ -302,6 +302,12 @@ export default function LeadersTimeline({
   const select = (t: Indexed, via: Via, force = false) => () => {
     clearTimeout(hideTimer.current);
     if (pinnedRef.current && !force) return;
+    // Crossing onto another term on the way to a card (the bar beneath a callout, the lane above
+    // the enlarged view) loses that card as surely as the grace period does.
+    const shown = horizontalSelected;
+    if (shown && !pinnedRef.current && (shown.index !== t.index || shown.viaInset !== via.viaInset)) {
+      pinTip.lost("switched");
+    }
     setHorizontalSelected({ index: t.index, ...via });
   };
   // Called with the mouseleave event when the pointer leaves a segment or callout; without one from
@@ -312,7 +318,7 @@ export default function LeadersTimeline({
     hideTimer.current = setTimeout(() => {
       if (tooltipHovered.current) return;
       // The card is still mounted here, so the hint can measure where it was.
-      if (!pinnedRef.current) pinTip.hidden();
+      if (!pinnedRef.current) pinTip.lost("hidden");
       setHorizontalSelected(pinnedRef.current);
     }, HIDE_DELAY);
   };

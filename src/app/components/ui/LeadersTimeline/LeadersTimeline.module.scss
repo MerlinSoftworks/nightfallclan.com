@@ -762,8 +762,8 @@
   color: var(--caption);
 }
 
-// A hint hung off the bottom edge of a card that just got away: click to pin it. It shows after a
-// few near-misses, once a month at most, and never takes the pointer (that would cause misses).
+// A hint hung off the edge of the term whose card just got away: click to pin it. It shows after a
+// couple of near-misses, once a month at most, and never takes the pointer (that would cause misses).
 .pinTip {
   position: absolute;
   z-index: 7;
