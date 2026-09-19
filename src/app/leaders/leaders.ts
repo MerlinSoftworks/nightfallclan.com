@@ -27,9 +27,9 @@ export const TERMS: Term[] = [
   { name: "Darxia", start: "2011-03-05", userId: 9365056 },
   { name: "XNoBoomX", start: "2011-08-12", userId: 16601274 },
   { name: "Fighters1234", termOf: 1, start: "2011-09-24", userId: 5821118 },
-  { name: "Fireantfive", termOf: 1, start: "2012-06-25", userId: 7626010 },
+  { name: "fireantfive", termOf: 1, start: "2012-06-25", userId: 7626010 },
   { name: "Fighters1234", termOf: 2, start: "2012-08-11", userId: 5821118 },
-  { name: "Bob104810", start: "2012-11-01", userId: 421796 },
+  { name: "bob104810", start: "2012-11-01", userId: 421796 },
   { name: "Fireantfive", termOf: 2, start: "2013-06-28", userId: 7626010 },
   { name: "BelmontLegend255", start: "2014-08-06", userId: 64404 },
   { name: "AustinLink", start: "2014-12-31", userId: 40544 },
@@ -37,7 +37,7 @@ export const TERMS: Term[] = [
   // Stepped down two days before WoopiWoopi took over; the group changed hands the same day.
   { name: "Thelegender", start: "2017-01-06", end: "2017-01-14", userId: 2983178 },
   { name: "WoopiWoopi", start: "2017-01-16", userId: 13085190 },
-  { name: "Devinzeth", start: "2018-09-05", userId: 3546729 },
+  { name: "devinzeth", start: "2018-09-05", userId: 3546729 },
   // Currently named AURASPHERlC on Roblox; shown under the name used while leading.
   { name: "Aurazeebe", start: "2019-04-30", userId: 34207219 },
 ];
