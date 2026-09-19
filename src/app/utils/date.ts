@@ -1,4 +1,4 @@
-const getOrdinalSuffix = (day: number): string => {
+export const getOrdinalSuffix =(day: number): string => {
   const mod100 = day % 100;
 
   if (mod100 >= 11 && mod100 <= 13) {

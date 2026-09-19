@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { HistoryIcon, WallIcon, GraphIcon } from "@icons";
+import { HistoryIcon, LeadersIcon, WallIcon, GraphIcon } from "@icons";
 import styles from "./NavLinks.module.scss";
 
 const navItems = [
   { href: "/", label: "History", icon: HistoryIcon, external: false },
+  { href: "/leaders", label: "Leaders", icon: LeadersIcon, external: false },
   { href: "/wall", label: "Wall", icon: WallIcon, external: false },
   { href: "/wall/graph", label: "Graph", icon: GraphIcon, external: false },
 ];
