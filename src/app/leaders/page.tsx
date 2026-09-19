@@ -22,7 +22,7 @@ export default async function LeadersPage() {
         title="Leaders of Nightfall Clan"
         meta={
           <span className={metaClassName}>
-            This page is a timeline of all twenty of NFC&apos;s leadership terms, as served by seventeen leaders
+            This page is a timeline of all twenty-two of NFC&apos;s leadership terms, as served by seventeen leaders
             across more than one and a half decades.
           </span>
         }

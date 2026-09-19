@@ -38,8 +38,8 @@ const CARD_BELOW_BAR = 70;
 const CARD_BELOW_LANE = 94;
 /** Grace period (ms) for the pointer to cross from a segment onto its card. */
 const HIDE_DELAY = 150;
-/** Terms narrower than this (as % of the bar, ~10px at full width) get a callout of their own. */
-const MAX_TINY_WIDTH = 1;
+/** At most this many callouts fit above the bar. */
+const MAX_CALLOUTS = 7;
 /** Leader line offset from a callout's left edge, as % of the bar (7px at full width). */
 const CALLOUT_LINE_OFFSET = 0.7;
 /** Where the funnel's top edge sits in the link-line SVG (px from the bar's bottom). */
@@ -76,9 +76,15 @@ function roundedPath(points: [number, number][], r: number): string {
   return `${d} L ${lx} ${ly}`;
 }
 
-/** Terms labelled above the bar: the design's picks plus any too thin to read. */
-const calloutTerms = (terms: TimelineTerm[]) =>
-  terms.filter((t) => CALLOUT_TERMS.includes(t.index) || (t.insetWidth === null && t.width < MAX_TINY_WIDTH));
+/**
+ * Terms labelled above the bar: every term too narrow to carry its number (a callout is its only
+ * label), then the design's picks in order of preference, as many as fit.
+ */
+const calloutTerms = (terms: TimelineTerm[]) => {
+  const unnumbered = terms.filter((t) => t.insetWidth === null && t.width < MIN_NUMBERED_WIDTH);
+  const picks = CALLOUT_TERMS.map((i) => terms[i - 1]).filter((t) => t && !unnumbered.includes(t));
+  return [...unnumbered, ...picks].slice(0, MAX_CALLOUTS).sort((a, b) => a.index - b.index);
+};
 
 const ariaLabel = (t: TimelineTerm) => `Term ${t.index}, ${t.name}, ${t.duration}`;
 
@@ -657,7 +663,7 @@ export default function LeadersTimeline({
           </div>
 
           <p className={styles.caption}>
-            Enlarged view of NFC&apos;s first year, since eight of the twenty terms are crammed into this comparatively brief window of time.
+            Enlarged view of NFC&apos;s first year, since eight of the twenty-two terms are crammed into this comparatively brief window of time.
           </p>
 
           {hSel && (
