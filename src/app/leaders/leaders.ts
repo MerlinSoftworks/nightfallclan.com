@@ -43,7 +43,7 @@ export const TERMS: Term[] = [
 ];
 
 /** Holds the Roblox group in parallel with the leaders; not counted as a term. */
-export const GROUP_OWNER = { name: "NoAlias", start: "2017-01-14", userId: 336003 };
+export const GROUP_OWNER = { name: "NoAlias", alias: "WannaBet", start: "2017-01-14", userId: 336003 };
 
 /** Terms that get a labelled callout above the horizontal bar, most wanted first; only as many as fit are shown. */
 export const CALLOUT_TERMS = [22, 18, 20, 15, 11];

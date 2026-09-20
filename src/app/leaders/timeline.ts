@@ -50,6 +50,7 @@ export type Timeline = {
   firstYearWidth: number;
   owner: {
     name: string;
+    alias: string;
     profileUrl: string;
     since: string;
     start: Date;
@@ -211,6 +212,7 @@ export function buildTimeline(nowIso: string): Timeline {
     firstYearWidth: horizontalLeft(firstYearEnd),
     owner: {
       name: GROUP_OWNER.name,
+      alias: GROUP_OWNER.alias,
       profileUrl: `https://www.roblox.com/users/${GROUP_OWNER.userId}/profile`,
       since: formatFullDate(ownerStart),
       start: ownerStart,
